@@ -1,11 +1,11 @@
-FROM golang:1.18
+FROM golang:1.20
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-COPY go.mod ./
-COPY go.sum ./
-RUN go mod download
-COPY *.go ./
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
 
-RUN go build -o /dynapgen
-CMD [ "/dynapgen" ]
+COPY . .
+RUN go build -v -o /usr/local/bin/app app.go
+
+CMD ["app"]
