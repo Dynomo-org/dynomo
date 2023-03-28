@@ -7,11 +7,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/api/option"
+)
+
+const (
+	maxRedisConnectRetryAttempts = 5
 )
 
 type Server struct {
@@ -41,9 +46,13 @@ func main() {
 		redisAddr = "redis:6379"
 		gin.SetMode(gin.ReleaseMode)
 	}
-	redisConn := redis.NewClient(&redis.Options{
+	redisOpt := &redis.Options{
 		Addr: redisAddr,
-	})
+	}
+	redisConn := connectRedis(redisOpt)
+	if redisConn == nil {
+		log.Fatal("error connecting to redis")
+	}
 	fmt.Println("connected to redis")
 
 	// init firebase connection
@@ -72,4 +81,17 @@ func main() {
 	r := gin.Default()
 	server.RegisterHandler(r)
 	r.Run(":5000")
+}
+
+// init redis with retry mechanism
+func connectRedis(redisOpt *redis.Options) *redis.Client {
+	for i := 0; i < maxRedisConnectRetryAttempts; i++ {
+		fmt.Printf("Trying to connect to redis (%d/%d)\n", i+1, maxRedisConnectRetryAttempts)
+		if client := redis.NewClient(redisOpt); client != nil {
+			return client
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	return nil
 }
