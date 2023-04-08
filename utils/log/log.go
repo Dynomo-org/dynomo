@@ -1,13 +1,17 @@
 package log
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 func Error(meta interface{}, err error, message string) {
-	fmt.Printf("%v", map[string]interface{}{
-		"err":      err,
+	json, _ := json.Marshal(map[string]interface{}{
+		"err":      err.Error(),
 		"metadata": meta,
 		"message":  message,
 	})
+	fmt.Printf("%v\n", string(json))
 }
 
 func Info(message string) {
