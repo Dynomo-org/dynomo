@@ -25,4 +25,3 @@ jobs:
             git pull origin main
             docker compose down --remove-orphans
             docker compose up --build -d
-          args: "-tt -vvv"
