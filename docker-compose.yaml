@@ -2,6 +2,8 @@ version: "3.9"
 services:
   app:
     build: .
+    environment:
+      ENV: production
     ports:
       - "3002:5000"
   redis:
