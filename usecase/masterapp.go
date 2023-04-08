@@ -45,7 +45,13 @@ func (uc *Usecase) GetMasterApp(ctx context.Context, appID string) (MasterApp, e
 			log.Error(meta, errorMasterAppNotFound, "master app not found - GetMasterApp")
 			return MasterApp{}, errorMasterAppNotFound
 		}
+
 		masterApp = masterAppFromDB
+		err = uc.repo.StoreMasterAppToCache(ctx, masterApp)
+		if err != nil {
+			log.Error(meta, err, "uc.repo.StoreMasterAppToCache() got error - GetMasterApp")
+			return MasterApp{}, err
+		}
 	}
 
 	return convertMasterAppFromRepo(masterApp), nil

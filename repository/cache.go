@@ -37,6 +37,10 @@ func (r *Repository) InvalidateMasterAppOnCache(ctx context.Context, appID strin
 }
 
 func (r *Repository) StoreMasterAppToCache(ctx context.Context, masterApp MasterApp) error {
-	result := r.redis.SetEx(ctx, masterApp.AppID, masterApp, redisTTL)
+	marshalled, err := json.Marshal(masterApp)
+	if err != nil {
+		return err
+	}
+	result := r.redis.SetEx(ctx, masterApp.AppID, string(marshalled), redisTTL)
 	return result.Err()
 }

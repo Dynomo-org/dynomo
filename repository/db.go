@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/google/uuid"
 )
@@ -11,8 +12,23 @@ const (
 )
 
 func (r *Repository) GetAllMasterAppFromDB(ctx context.Context) ([]MasterApp, error) {
+	var result map[string]interface{}
+	err := r.db.NewRef(collectionMstApp).Get(ctx, &result)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+
+	slice := make([]interface{}, 0, len(result))
+	for _, app := range result {
+		slice = append(slice, app)
+	}
+	sliceStr, _ := json.Marshal(slice)
+
 	var data []MasterApp
-	err := r.db.NewRef(collectionMstApp).Get(ctx, data)
+	err = json.Unmarshal([]byte(sliceStr), &data)
 	return data, err
 }
 
@@ -33,7 +49,9 @@ func (r *Repository) InsertNewMasterAppToDB(ctx context.Context, name string) (s
 		AppID: appID,
 		Name:  name,
 	}
-	_, err := r.db.NewRef(collectionMstApp).Push(ctx, master)
+	err := r.db.NewRef(collectionMstApp).Set(ctx, map[string]interface{}{
+		appID: master,
+	})
 	return appID, err
 }
 

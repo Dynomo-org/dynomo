@@ -28,10 +28,6 @@ func NewServer(handler *handler.Handler) *Server {
 	return &Server{handler: handler}
 }
 
-func (s *Server) RegisterHandler(r *gin.Engine) {
-	r.GET("/ping", s.handler.Ping)
-}
-
 func main() {
 	env := os.Getenv("ENV")
 
@@ -72,10 +68,9 @@ func main() {
 	repository := repository.NewRepository(redisConn, dbConn)
 	usecase := usecase.NewUsecase(repository)
 	handler := handler.NewHandler(usecase)
-	server := NewServer(handler)
 
 	r := gin.Default()
-	server.RegisterHandler(r)
+	handler.RegisterHandler(r)
 	r.Run(":5000")
 }
 
