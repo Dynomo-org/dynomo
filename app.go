@@ -4,6 +4,7 @@ import (
 	"context"
 	"dynapgen/handler"
 	"dynapgen/repository"
+	"dynapgen/usecase"
 	"fmt"
 	"log"
 	"os"
@@ -29,12 +30,6 @@ func NewServer(handler *handler.Handler) *Server {
 
 func (s *Server) RegisterHandler(r *gin.Engine) {
 	r.GET("/ping", s.handler.Ping)
-
-	// Admin router
-	r.GET("/_admin/collections", s.handler.GetAllCollection)
-
-	// Public Router
-	r.POST("/app/createapp", s.handler.CreateNewMasterApp)
 }
 
 func main() {
@@ -75,7 +70,8 @@ func main() {
 
 	// init app layers
 	repository := repository.NewRepository(redisConn, dbConn)
-	handler := handler.NewHandler(repository)
+	usecase := usecase.NewUsecase(repository)
+	handler := handler.NewHandler(usecase)
 	server := NewServer(handler)
 
 	r := gin.Default()

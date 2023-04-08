@@ -1,10 +1,18 @@
 package repository
 
 type MasterApp struct {
+	AppID      string        `json:"id,omitempty"`
 	Name       string        `json:"name,omitempty"`
+	AdsConfig  AdsConfig     `json:"ads_config,omitempty"`
 	AppConfig  AppConfig     `json:"app_config,omitempty"`
 	Contents   []AppContent  `json:"contents,omitempty"`
 	Categories []AppCategory `json:"categories,omitempty"`
+}
+
+type AdsConfig struct {
+	EnableBanner       bool `json:"enable_banner,omitempty"`
+	EnableInterstitial bool `json:"enable_interstitial,omitempty"`
+	EnableRewards      bool `json:"enable_rewards,omitempty"`
 }
 
 type AppCategory struct {
