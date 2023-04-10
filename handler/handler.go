@@ -25,6 +25,7 @@ func NewHandler(usecase usecaseProvider) *Handler {
 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
+	router.GET("/", h.WelcomeMessage)
 	router.GET("/_admin/ping", h.Ping)
 	router.GET("/_admin/apps", h.HandleGetAllMasterApp)
 

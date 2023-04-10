@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Checking out branch
         uses: actions/checkout@v2
-      - name: Building docker image
-        run: docker build . --tag ibrahimsyah/dynapgen:latest
       - name: Publish to Registry
         uses: elgohr/Publish-Docker-Github-Action@v5
         with:
