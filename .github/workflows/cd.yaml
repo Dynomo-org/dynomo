@@ -12,13 +12,24 @@ jobs:
     steps:
       - name: Checking out branch
         uses: actions/checkout@v2
-      - name: Build golang binary
-        run: go build -o binary/dynapgen
-      - name: Pushing binary to branch
-        uses: s0/git-publish-subdir-action@develop
-        env:
-          REPO: self
-          BRANCH: binary
-          FOLDER: binary
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MESSAGE: "Build: ({sha}) {msg}"
+      - name: Building docker image
+        run: docker build . --tag ibrahimsyah/dynapgen:latest
+      - name: Publish to Registry
+        uses: elgohr/Publish-Docker-Github-Action@v5
+        with:
+          name: ibrahimsyah/dynapgen
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Deploy to cloud server
+        uses: fifsky/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          user: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          command: |
+            git clone https://github.com/ibrahimsyah-tkpd/dynapgen
+            cd ~/dynapgen
+            git pull origin main
+            docker compose down --remove-orphans
+            docker compose up --build -d
