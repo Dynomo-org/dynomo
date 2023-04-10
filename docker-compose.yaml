@@ -6,5 +6,7 @@ services:
       ENV: production
     ports:
       - "3002:5000"
+    volumes:
+      - ./:/usr/src/app/
   redis:
     image: "redis:alpine"

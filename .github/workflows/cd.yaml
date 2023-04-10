@@ -29,5 +29,6 @@ jobs:
             git clone https://github.com/ibrahimsyah-tkpd/dynapgen
             cd ~/dynapgen
             git pull origin main
+            docker pull ibrahimsyah/dynapgen:latest
             docker compose down --remove-orphans
             docker compose up --build -d
