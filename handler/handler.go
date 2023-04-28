@@ -52,6 +52,7 @@ func WriteJson(ctx *gin.Context, data interface{}, err error, statusCode ...int)
 
 	if len(statusCode) > 0 {
 		code = statusCode[0]
+		payload["code"] = code
 	}
 
 	ctx.JSON(code, payload)
