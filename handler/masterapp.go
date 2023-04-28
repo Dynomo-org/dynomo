@@ -49,7 +49,7 @@ func (h *Handler) HandleGetAllMasterApp(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleGetMasterApp(ctx *gin.Context) {
-	appID := ctx.Query("app_id")
+	appID := ctx.Query("id")
 	if appID == "" {
 		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
 		return
