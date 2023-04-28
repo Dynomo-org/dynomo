@@ -2,7 +2,7 @@ package usecase
 
 type MasterApp struct {
 	AppID      string
-	Name       string
+	AppName    string
 	AdsConfig  AdsConfig
 	AppConfig  AppConfig
 	Contents   []AppContent
@@ -12,7 +12,7 @@ type MasterApp struct {
 type AdsConfig struct {
 	EnableBanner       bool
 	EnableInterstitial bool
-	EnableRewards      bool
+	EnableReward       bool
 }
 
 type AppCategory struct {
@@ -21,6 +21,7 @@ type AppCategory struct {
 }
 
 type AppContent struct {
+	ID          string
 	Title       string
 	Description string
 	Content     string
@@ -28,9 +29,14 @@ type AppContent struct {
 }
 
 type AppConfig struct {
-	AppName           string
-	ExitPromptMessage string
-	Style             AppStyle
+	Strings AppString
+	Style   AppStyle
+}
+
+type AppString struct {
+	ExitPromptMessage   string
+	NoConnectionMessage string
+	PrivacyPolicyText   string
 }
 
 type AppStyle struct {

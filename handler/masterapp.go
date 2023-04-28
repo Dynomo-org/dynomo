@@ -95,12 +95,11 @@ func convertMasterAppFromUsecase(app usecase.MasterApp) MasterApp {
 
 	return MasterApp{
 		AppID:     app.AppID,
-		Name:      app.Name,
+		AppName:   app.AppName,
 		AdsConfig: AdsConfig(app.AdsConfig),
 		AppConfig: AppConfig{
-			AppName:           app.AppConfig.AppName,
-			ExitPromptMessage: app.AppConfig.ExitPromptMessage,
-			Style:             AppStyle(app.AppConfig.Style),
+			Strings: AppString(app.AppConfig.Strings),
+			Style:   AppStyle(app.AppConfig.Style),
 		},
 		Contents:   contents,
 		Categories: categories,
@@ -120,12 +119,11 @@ func convertMasterAppToUsecase(app MasterApp) usecase.MasterApp {
 
 	return usecase.MasterApp{
 		AppID:     app.AppID,
-		Name:      app.Name,
+		AppName:   app.AppName,
 		AdsConfig: usecase.AdsConfig(app.AdsConfig),
 		AppConfig: usecase.AppConfig{
-			AppName:           app.AppConfig.AppName,
-			ExitPromptMessage: app.AppConfig.ExitPromptMessage,
-			Style:             usecase.AppStyle(app.AppConfig.Style),
+			Strings: usecase.AppString(app.AppConfig.Strings),
+			Style:   usecase.AppStyle(app.AppConfig.Style),
 		},
 		Contents:   contents,
 		Categories: categories,

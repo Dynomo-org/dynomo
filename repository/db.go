@@ -46,8 +46,8 @@ func (r *Repository) InsertMasterAppToDB(ctx context.Context, master MasterApp) 
 func (r *Repository) InsertNewMasterAppToDB(ctx context.Context, name string) (string, error) {
 	appID := uuid.NewString()
 	master := MasterApp{
-		AppID: appID,
-		Name:  name,
+		AppID:   appID,
+		AppName: name,
 	}
 	err := r.db.NewRef(collectionMstApp).Set(ctx, map[string]interface{}{
 		appID: master,

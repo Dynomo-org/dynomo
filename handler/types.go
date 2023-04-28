@@ -6,7 +6,7 @@ type NewMasterAppRequest struct {
 
 type MasterApp struct {
 	AppID      string        `json:"id,omitempty"`
-	Name       string        `json:"name,omitempty"`
+	AppName    string        `json:"name,omitempty"`
 	AdsConfig  AdsConfig     `json:"ads_config,omitempty"`
 	AppConfig  AppConfig     `json:"app_config,omitempty"`
 	Contents   []AppContent  `json:"contents,omitempty"`
@@ -16,7 +16,7 @@ type MasterApp struct {
 type AdsConfig struct {
 	EnableBanner       bool `json:"enable_banner,omitempty"`
 	EnableInterstitial bool `json:"enable_interstitial,omitempty"`
-	EnableRewards      bool `json:"enable_rewards,omitempty"`
+	EnableReward       bool `json:"enable_reward,omitempty"`
 }
 
 type AppCategory struct {
@@ -25,6 +25,7 @@ type AppCategory struct {
 }
 
 type AppContent struct {
+	ID          string `json:"id,omitempty"`
 	Title       string `json:"title,omitempty"`
 	Description string `json:"description,omitempty"`
 	Content     string `json:"content,omitempty"`
@@ -32,9 +33,14 @@ type AppContent struct {
 }
 
 type AppConfig struct {
-	AppName           string   `json:"app_name,omitempty"`
-	ExitPromptMessage string   `json:"exit_message,omitempty"`
-	Style             AppStyle `json:"app_style,omitempty"`
+	Strings AppString `json:"strings,omitempty"`
+	Style   AppStyle  `json:"style,omitempty"`
+}
+
+type AppString struct {
+	ExitPromptMessage   string `json:"exit_message,omitempty"`
+	NoConnectionMessage string `json:"no_connection_message,omitempty"`
+	PrivacyPolicyText   string `json:"privacy_policy_text,omitempty"`
 }
 
 type AppStyle struct {

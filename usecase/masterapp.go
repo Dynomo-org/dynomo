@@ -107,12 +107,11 @@ func convertMasterAppFromRepo(app repository.MasterApp) MasterApp {
 
 	return MasterApp{
 		AppID:     app.AppID,
-		Name:      app.Name,
+		AppName:   app.AppName,
 		AdsConfig: AdsConfig(app.AdsConfig),
 		AppConfig: AppConfig{
-			AppName:           app.AppConfig.AppName,
-			ExitPromptMessage: app.AppConfig.ExitPromptMessage,
-			Style:             AppStyle(app.AppConfig.Style),
+			Strings: AppString(app.AppConfig.Strings),
+			Style:   AppStyle(app.AppConfig.Style),
 		},
 		Contents:   contents,
 		Categories: categories,
@@ -132,12 +131,11 @@ func convertMasterAppToRepo(app MasterApp) repository.MasterApp {
 
 	return repository.MasterApp{
 		AppID:     app.AppID,
-		Name:      app.Name,
+		AppName:   app.AppName,
 		AdsConfig: repository.AdsConfig(app.AdsConfig),
 		AppConfig: repository.AppConfig{
-			AppName:           app.AppConfig.AppName,
-			ExitPromptMessage: app.AppConfig.ExitPromptMessage,
-			Style:             repository.AppStyle(app.AppConfig.Style),
+			Strings: repository.AppString(app.AppConfig.Strings),
+			Style:   repository.AppStyle(app.AppConfig.Style),
 		},
 		Contents:   contents,
 		Categories: categories,
