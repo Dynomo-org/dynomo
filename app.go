@@ -11,6 +11,7 @@ import (
 	"time"
 
 	firebase "firebase.google.com/go/v4"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/api/option"
@@ -70,6 +71,7 @@ func main() {
 	handler := handler.NewHandler(usecase)
 
 	r := gin.Default()
+	r.Use(cors.Default())
 	handler.RegisterHandler(r)
 	r.Run(":5000")
 }
