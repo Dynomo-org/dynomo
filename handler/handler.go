@@ -11,7 +11,7 @@ import (
 type usecaseProvider interface {
 	GetAllMasterApp(ctx context.Context) ([]usecase.MasterApp, error)
 	GetMasterApp(ctx context.Context, appID string) (usecase.MasterApp, error)
-	NewMasterApp(ctx context.Context, name string) (string, error)
+	NewMasterApp(ctx context.Context, request usecase.NewMasterAppRequest) error
 	SaveMasterApp(ctx context.Context, masterApp usecase.MasterApp) error
 	UpdateMasterApp(ctx context.Context, masterApp usecase.MasterApp) error
 }

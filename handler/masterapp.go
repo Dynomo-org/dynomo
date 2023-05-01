@@ -22,14 +22,14 @@ func (h *Handler) HandleCreateNewMasterApp(ctx *gin.Context) {
 		return
 	}
 
-	appID, err := h.usecase.NewMasterApp(ctx, request.AppName)
+	err = h.usecase.NewMasterApp(ctx, usecase.NewMasterAppRequest(request))
 	if err != nil {
-		log.Error(map[string]interface{}{"app_name": request.AppName}, err, "h.usecase.NewMasterApp() got error - HandleCreateNewMasterApp")
+		log.Error(request, err, "h.usecase.NewMasterApp() got error - HandleCreateNewMasterApp")
 		WriteJson(ctx, nil, err)
 		return
 	}
 
-	WriteJson(ctx, map[string]interface{}{"app_id": appID}, nil)
+	WriteJson(ctx, nil, nil)
 }
 
 func (h *Handler) HandleGetAllMasterApp(ctx *gin.Context) {
@@ -101,8 +101,10 @@ func convertMasterAppFromUsecase(app usecase.MasterApp) MasterApp {
 			Strings: AppString(app.AppConfig.Strings),
 			Style:   AppStyle(app.AppConfig.Style),
 		},
-		Contents:   contents,
-		Categories: categories,
+		Contents:       contents,
+		Categories:     categories,
+		AppPackageName: app.AppPackageName,
+		CreatedAt:      app.CreatedAt,
 	}
 }
 

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -43,16 +44,16 @@ func (r *Repository) InsertMasterAppToDB(ctx context.Context, master MasterApp) 
 	return err
 }
 
-func (r *Repository) InsertNewMasterAppToDB(ctx context.Context, name string) (string, error) {
+func (r *Repository) InsertNewMasterAppToDB(ctx context.Context, request NewMasterAppRequest) error {
 	appID := uuid.NewString()
 	master := MasterApp{
-		AppID:   appID,
-		AppName: name,
+		AppID:          appID,
+		AppName:        request.AppName,
+		AppPackageName: request.PackageName,
+		CreatedAt:      time.Now(),
 	}
-	err := r.db.NewRef(collectionMstApp).Set(ctx, map[string]interface{}{
-		appID: master,
-	})
-	return appID, err
+	err := r.db.NewRef(collectionMstApp).Child(appID).Set(ctx, master)
+	return err
 }
 
 func (r *Repository) UpdateMasterAppOnDB(ctx context.Context, masterApp MasterApp) error {

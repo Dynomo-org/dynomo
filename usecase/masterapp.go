@@ -57,14 +57,14 @@ func (uc *Usecase) GetMasterApp(ctx context.Context, appID string) (MasterApp, e
 	return convertMasterAppFromRepo(masterApp), nil
 }
 
-func (uc *Usecase) NewMasterApp(ctx context.Context, name string) (string, error) {
-	id, err := uc.repo.InsertNewMasterAppToDB(ctx, name)
+func (uc *Usecase) NewMasterApp(ctx context.Context, request NewMasterAppRequest) error {
+	err := uc.repo.InsertNewMasterAppToDB(ctx, repository.NewMasterAppRequest(request))
 	if err != nil {
-		log.Error(map[string]interface{}{"name": name}, err, "uc.repo.InsertNewMasterAppToDB() got error - v")
-		return "", nil
+		log.Error(request, err, "uc.repo.InsertNewMasterAppToDB() got error - NewMasterApp")
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 func (uc *Usecase) SaveMasterApp(ctx context.Context, masterApp MasterApp) error {
@@ -113,8 +113,10 @@ func convertMasterAppFromRepo(app repository.MasterApp) MasterApp {
 			Strings: AppString(app.AppConfig.Strings),
 			Style:   AppStyle(app.AppConfig.Style),
 		},
-		Contents:   contents,
-		Categories: categories,
+		Contents:       contents,
+		Categories:     categories,
+		AppPackageName: app.AppPackageName,
+		CreatedAt:      app.CreatedAt,
 	}
 }
 

@@ -1,18 +1,37 @@
 package usecase
 
+import "time"
+
+type NewMasterAppRequest struct {
+	AppName     string
+	PackageName string
+}
+
 type MasterApp struct {
-	AppID      string
-	AppName    string
-	AdsConfig  AdsConfig
-	AppConfig  AppConfig
-	Contents   []AppContent
-	Categories []AppCategory
+	AppID          string
+	AppName        string
+	AppPackageName string
+	AdmobAppID     string
+	AppLovinSDKKey string
+	AdsConfig      AdsConfig
+	AppConfig      AppConfig
+	Contents       []AppContent
+	Categories     []AppCategory
+	CreatedAt      time.Time
+	UpdatedAt      *time.Time
 }
 
 type AdsConfig struct {
-	EnableBanner       bool
-	EnableInterstitial bool
-	EnableReward       bool
+	EnableOpenAd               bool
+	EnableBannerAd             bool
+	EnableInterstitialAd       bool
+	EnableRewardAd             bool
+	EnableNativeAd             bool
+	PrimaryAdType              uint8
+	SecondaryAdType            uint8
+	TertiaryAdType             uint8
+	InterstitialIntervalSecond int
+	TestDevices                []string
 }
 
 type AppCategory struct {
@@ -34,6 +53,10 @@ type AppConfig struct {
 }
 
 type AppString struct {
+	SetWallpaperHome    string
+	SetWallpaperLock    string
+	Cancel              string
+	SuccessSetWallpaper string
 	ExitPromptMessage   string
 	NoConnectionMessage string
 	PrivacyPolicyText   string
