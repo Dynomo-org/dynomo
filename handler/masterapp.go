@@ -94,9 +94,20 @@ func convertMasterAppFromUsecase(app usecase.MasterApp) MasterApp {
 	}
 
 	return MasterApp{
-		AppID:     app.AppID,
-		AppName:   app.AppName,
-		AdsConfig: AdsConfig(app.AdsConfig),
+		AppID:   app.AppID,
+		AppName: app.AppName,
+		AdsConfig: AdsConfig{
+			EnableOpenAd:               app.AdsConfig.EnableOpenAd,
+			EnableBannerAd:             app.AdsConfig.EnableBannerAd,
+			EnableInterstitialAd:       app.AdsConfig.EnableInterstitialAd,
+			EnableRewardAd:             app.AdsConfig.EnableRewardAd,
+			EnableNativeAd:             app.AdsConfig.EnableNativeAd,
+			PrimaryAd:                  Ad(app.AdsConfig.PrimaryAd),
+			SecondaryAd:                Ad(app.AdsConfig.SecondaryAd),
+			TertiaryAd:                 Ad(app.AdsConfig.TertiaryAd),
+			InterstitialIntervalSecond: app.AdsConfig.InterstitialIntervalSecond,
+			TestDevices:                app.AdsConfig.TestDevices,
+		},
 		AppConfig: AppConfig{
 			Strings: AppString(app.AppConfig.Strings),
 			Style:   AppStyle(app.AppConfig.Style),
@@ -120,9 +131,20 @@ func convertMasterAppToUsecase(app MasterApp) usecase.MasterApp {
 	}
 
 	return usecase.MasterApp{
-		AppID:     app.AppID,
-		AppName:   app.AppName,
-		AdsConfig: usecase.AdsConfig(app.AdsConfig),
+		AppID:   app.AppID,
+		AppName: app.AppName,
+		AdsConfig: usecase.AdsConfig{
+			EnableOpenAd:               app.AdsConfig.EnableOpenAd,
+			EnableBannerAd:             app.AdsConfig.EnableBannerAd,
+			EnableInterstitialAd:       app.AdsConfig.EnableInterstitialAd,
+			EnableRewardAd:             app.AdsConfig.EnableRewardAd,
+			EnableNativeAd:             app.AdsConfig.EnableNativeAd,
+			PrimaryAd:                  usecase.Ad(app.AdsConfig.PrimaryAd),
+			SecondaryAd:                usecase.Ad(app.AdsConfig.SecondaryAd),
+			TertiaryAd:                 usecase.Ad(app.AdsConfig.TertiaryAd),
+			InterstitialIntervalSecond: app.AdsConfig.InterstitialIntervalSecond,
+			TestDevices:                app.AdsConfig.TestDevices,
+		},
 		AppConfig: usecase.AppConfig{
 			Strings: usecase.AppString(app.AppConfig.Strings),
 			Style:   usecase.AppStyle(app.AppConfig.Style),

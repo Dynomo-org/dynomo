@@ -10,6 +10,16 @@ import (
 
 const (
 	collectionMstApp = "mst_app"
+
+	AdTypeAdmob       = 1
+	AdTypeMAN         = 2
+	AdTypeAppLovinMax = 3
+
+	AdmobOpenAdTestID         = "ca-app-pub-3940256099942544/3419835294"
+	AdmobBannerAdTestID       = "ca-app-pub-3940256099942544/6300978111"
+	AdmobInterstitialAdTestID = "ca-app-pub-3940256099942544/1033173712"
+	AdmobRewardAdTestID       = "ca-app-pub-3940256099942544/5224354917"
+	AdmobNativeAdTestID       = "ca-app-pub-3940256099942544/2247696110"
 )
 
 func (r *Repository) GetAllMasterAppFromDB(ctx context.Context) ([]MasterApp, error) {
@@ -51,6 +61,16 @@ func (r *Repository) InsertNewMasterAppToDB(ctx context.Context, request NewMast
 		AppName:        request.AppName,
 		AppPackageName: request.PackageName,
 		CreatedAt:      time.Now(),
+		AdsConfig: AdsConfig{
+			PrimaryAd: Ad{
+				AdType:           AdTypeAdmob,
+				OpenAdID:         AdmobOpenAdTestID,
+				BannerAdID:       AdmobBannerAdTestID,
+				InterstitialAdID: AdmobInterstitialAdTestID,
+				RewardAdID:       AdmobRewardAdTestID,
+				NativeAdID:       AdmobNativeAdTestID,
+			},
+		},
 	}
 	err := r.db.NewRef(collectionMstApp).Child(appID).Set(ctx, master)
 	return err

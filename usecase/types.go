@@ -2,6 +2,8 @@ package usecase
 
 import "time"
 
+type AdType string
+
 type NewMasterAppRequest struct {
 	AppName     string
 	PackageName string
@@ -22,16 +24,27 @@ type MasterApp struct {
 }
 
 type AdsConfig struct {
-	EnableOpenAd               bool
-	EnableBannerAd             bool
-	EnableInterstitialAd       bool
-	EnableRewardAd             bool
-	EnableNativeAd             bool
-	PrimaryAdType              uint8
-	SecondaryAdType            uint8
-	TertiaryAdType             uint8
+	EnableOpenAd         bool
+	EnableBannerAd       bool
+	EnableInterstitialAd bool
+	EnableRewardAd       bool
+	EnableNativeAd       bool
+
+	PrimaryAd   Ad
+	SecondaryAd Ad
+	TertiaryAd  Ad
+
 	InterstitialIntervalSecond int
 	TestDevices                []string
+}
+
+type Ad struct {
+	AdType           uint8
+	OpenAdID         string
+	BannerAdID       string
+	InterstitialAdID string
+	RewardAdID       string
+	NativeAdID       string
 }
 
 type AppCategory struct {

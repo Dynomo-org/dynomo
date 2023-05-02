@@ -22,16 +22,27 @@ type MasterApp struct {
 }
 
 type AdsConfig struct {
-	EnableOpenAd               bool     `json:"enable_open_ad,omitempty"`
-	EnableBannerAd             bool     `json:"enable_banner_ad,omitempty"`
-	EnableInterstitialAd       bool     `json:"enable_interstitial_ad,omitempty"`
-	EnableRewardAd             bool     `json:"enable_reward_ad,omitempty"`
-	EnableNativeAd             bool     `json:"enable_native_ad,omitempty"`
-	PrimaryAdType              uint8    `json:"primary_ad_type,omitempty"`
-	SecondaryAdType            uint8    `json:"secondary_ad_type,omitempty"`
-	TertiaryAdType             uint8    `json:"tiary_ad_type,omitempty"`
+	EnableOpenAd         bool `json:"enable_open_ad,omitempty"`
+	EnableBannerAd       bool `json:"enable_banner_ad,omitempty"`
+	EnableInterstitialAd bool `json:"enable_interstitial_ad,omitempty"`
+	EnableRewardAd       bool `json:"enable_reward_ad,omitempty"`
+	EnableNativeAd       bool `json:"enable_native_ad,omitempty"`
+
+	PrimaryAd   Ad `json:"primary_ad,omitempty"`
+	SecondaryAd Ad `json:"secondary_ad,omitempty"`
+	TertiaryAd  Ad `json:"tertiary_ad,omitempty"`
+
 	InterstitialIntervalSecond int      `json:"interstitial_interval_second,omitempty"`
 	TestDevices                []string `json:"test_devices,omitempty"`
+}
+
+type Ad struct {
+	AdType           uint8  `json:"ad_type,omitempty"`
+	OpenAdID         string `json:"open_ad_id,omitempty"`
+	BannerAdID       string `json:"banner_ad_id,omitempty"`
+	InterstitialAdID string `json:"interstitial_ad_id,omitempty"`
+	RewardAdID       string `json:"reward_ad_id,omitempty"`
+	NativeAdID       string `json:"native_ad_id,omitempty"`
 }
 
 type AppCategory struct {

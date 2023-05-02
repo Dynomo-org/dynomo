@@ -106,9 +106,20 @@ func convertMasterAppFromRepo(app repository.MasterApp) MasterApp {
 	}
 
 	return MasterApp{
-		AppID:     app.AppID,
-		AppName:   app.AppName,
-		AdsConfig: AdsConfig(app.AdsConfig),
+		AppID:   app.AppID,
+		AppName: app.AppName,
+		AdsConfig: AdsConfig{
+			EnableOpenAd:               app.AdsConfig.EnableOpenAd,
+			EnableBannerAd:             app.AdsConfig.EnableBannerAd,
+			EnableInterstitialAd:       app.AdsConfig.EnableInterstitialAd,
+			EnableRewardAd:             app.AdsConfig.EnableRewardAd,
+			EnableNativeAd:             app.AdsConfig.EnableNativeAd,
+			PrimaryAd:                  Ad(app.AdsConfig.PrimaryAd),
+			SecondaryAd:                Ad(app.AdsConfig.SecondaryAd),
+			TertiaryAd:                 Ad(app.AdsConfig.TertiaryAd),
+			InterstitialIntervalSecond: app.AdsConfig.InterstitialIntervalSecond,
+			TestDevices:                app.AdsConfig.TestDevices,
+		},
 		AppConfig: AppConfig{
 			Strings: AppString(app.AppConfig.Strings),
 			Style:   AppStyle(app.AppConfig.Style),
@@ -132,9 +143,20 @@ func convertMasterAppToRepo(app MasterApp) repository.MasterApp {
 	}
 
 	return repository.MasterApp{
-		AppID:     app.AppID,
-		AppName:   app.AppName,
-		AdsConfig: repository.AdsConfig(app.AdsConfig),
+		AppID:   app.AppID,
+		AppName: app.AppName,
+		AdsConfig: repository.AdsConfig{
+			EnableOpenAd:               app.AdsConfig.EnableOpenAd,
+			EnableBannerAd:             app.AdsConfig.EnableBannerAd,
+			EnableInterstitialAd:       app.AdsConfig.EnableInterstitialAd,
+			EnableRewardAd:             app.AdsConfig.EnableRewardAd,
+			EnableNativeAd:             app.AdsConfig.EnableNativeAd,
+			PrimaryAd:                  repository.Ad(app.AdsConfig.PrimaryAd),
+			SecondaryAd:                repository.Ad(app.AdsConfig.SecondaryAd),
+			TertiaryAd:                 repository.Ad(app.AdsConfig.TertiaryAd),
+			InterstitialIntervalSecond: app.AdsConfig.InterstitialIntervalSecond,
+			TestDevices:                app.AdsConfig.TestDevices,
+		},
 		AppConfig: repository.AppConfig{
 			Strings: repository.AppString(app.AppConfig.Strings),
 			Style:   repository.AppStyle(app.AppConfig.Style),
