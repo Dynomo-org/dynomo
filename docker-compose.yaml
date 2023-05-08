@@ -4,6 +4,7 @@ services:
     image: "ibrahimsyah/dynapgen:latest"
     environment:
       ENV: production
+      GITHUB_CLIENT_KEY: ${GITHUB_CLIENT_KEY}
     ports:
       - "3002:5000"
     volumes:

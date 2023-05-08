@@ -12,35 +12,35 @@ const (
 	redisTTL = 24 * time.Hour
 )
 
-func (r *Repository) GetMasterAppFromCache(ctx context.Context, appID string) (MasterApp, error) {
+func (r *Repository) GetAppFromCache(ctx context.Context, appID string) (App, error) {
 	result, err := r.redis.Get(ctx, appID).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return MasterApp{}, nil
+			return App{}, nil
 		}
 
-		return MasterApp{}, err
+		return App{}, err
 	}
 
-	var masterApp MasterApp
-	err = json.Unmarshal([]byte(result), &masterApp)
+	var app App
+	err = json.Unmarshal([]byte(result), &app)
 	if err != nil {
-		return MasterApp{}, nil
+		return App{}, nil
 	}
 
-	return masterApp, nil
+	return app, nil
 }
 
-func (r *Repository) InvalidateMasterAppOnCache(ctx context.Context, appID string) error {
+func (r *Repository) InvalidateAppOnCache(ctx context.Context, appID string) error {
 	result := r.redis.Del(ctx, appID)
 	return result.Err()
 }
 
-func (r *Repository) StoreMasterAppToCache(ctx context.Context, masterApp MasterApp) error {
-	marshalled, err := json.Marshal(masterApp)
+func (r *Repository) StoreAppToCache(ctx context.Context, App App) error {
+	marshalled, err := json.Marshal(App)
 	if err != nil {
 		return err
 	}
-	result := r.redis.SetEx(ctx, masterApp.AppID, string(marshalled), redisTTL)
+	result := r.redis.SetEx(ctx, App.AppID, string(marshalled), redisTTL)
 	return result.Err()
 }

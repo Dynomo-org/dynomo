@@ -7,13 +7,14 @@ import (
 	"dynapgen/usecase"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/google/go-github/v52/github"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 	"google.golang.org/api/option"
 )
 
@@ -30,11 +31,18 @@ func NewServer(handler *handler.Handler) *Server {
 }
 
 func main() {
-	env := os.Getenv("ENV")
+	viper.SetConfigName("app")
+	viper.SetConfigType("dotenv")
+	viper.AddConfigPath(".")
+	viper.AutomaticEnv()
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal("failed to read config, err:", err.Error())
+	}
 
 	// init redis connection
 	redisAddr := "localhost:6379"
-	if env == "production" {
+	if viper.GetString("ENV") == "production" {
 		redisAddr = "redis:6379"
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -65,8 +73,13 @@ func main() {
 	}
 	fmt.Println("connected to database")
 
+	// init github connection
+	githubClientKey := viper.GetString("GITHUB_CLIENT_KEY")
+	githubConn := github.NewTokenClient(ctx, githubClientKey)
+	fmt.Println("connected to github")
+
 	// init app layers
-	repository := repository.NewRepository(redisConn, dbConn)
+	repository := repository.NewRepository(redisConn, dbConn, githubConn)
 	usecase := usecase.NewUsecase(repository)
 	handler := handler.NewHandler(usecase)
 
