@@ -186,6 +186,7 @@ func convertAppFromUsecase(app usecase.App) App {
 		Contents:   contents,
 		Categories: categories,
 		CreatedAt:  app.CreatedAt,
+		UpdatedAt:  app.UpdatedAt,
 	}
 }
 
@@ -226,5 +227,7 @@ func convertAppToUsecase(app App) usecase.App {
 		},
 		Contents:   contents,
 		Categories: categories,
+		CreatedAt:  app.CreatedAt,
+		UpdatedAt:  app.UpdatedAt,
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"image/png"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
@@ -124,7 +125,9 @@ func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, lo
 	}
 	os.Remove(localPath)
 
+	timeNow := time.Now()
 	app.IconURL = iconURL
+	app.UpdatedAt = &timeNow
 	param := convertAppToRepo(app)
 	err = uc.repo.UpdateAppOnDB(ctx, param)
 	if err != nil {
@@ -189,6 +192,7 @@ func convertAppFromRepo(app repository.App) App {
 		Contents:   contents,
 		Categories: categories,
 		CreatedAt:  app.CreatedAt,
+		UpdatedAt:  app.UpdatedAt,
 	}
 }
 
@@ -228,6 +232,8 @@ func convertAppToRepo(app App) repository.App {
 			Style:   repository.AppStyle(app.AppConfig.Style),
 		},
 		Contents:   contents,
+		CreatedAt:  app.CreatedAt,
+		UpdatedAt:  app.UpdatedAt,
 		Categories: categories,
 	}
 }
