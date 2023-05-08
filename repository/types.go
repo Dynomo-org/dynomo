@@ -1,24 +1,30 @@
 package repository
 
-import "time"
+import (
+	"time"
+)
 
-type NewMasterAppRequest struct {
+type NewAppRequest struct {
 	AppName     string
 	PackageName string
 }
 
-type MasterApp struct {
-	AppID          string        `json:"id,omitempty"`
-	AppName        string        `json:"name,omitempty"`
-	AppPackageName string        `json:"package_name,omitempty"`
-	AdmobAppID     string        `json:"admob_app_id,omitempty"`
-	AppLovinSDKKey string        `json:"applovin_sdk_key,omitempty"`
-	AdsConfig      AdsConfig     `json:"ads_config,omitempty"`
-	AppConfig      AppConfig     `json:"app_config,omitempty"`
-	Contents       []AppContent  `json:"contents,omitempty"`
-	Categories     []AppCategory `json:"categories,omitempty"`
-	CreatedAt      time.Time     `json:"created_at,omitempty"`
-	UpdatedAt      *time.Time    `json:"updated_at,omitempty"`
+type App struct {
+	AppID             string        `json:"id,omitempty"`
+	AppName           string        `json:"name,omitempty"`
+	AppPackageName    string        `json:"package_name,omitempty"`
+	VersionCode       uint          `json:"version_code,omitempty"`
+	VersionName       string        `json:"version_name,omitempty"`
+	IconURL           string        `json:"icon_url,omitempty"`
+	PrivacyPolicyLink string        `json:"privacy_policy_link,omitempty"`
+	AdmobAppID        string        `json:"admob_app_id,omitempty"`
+	AppLovinSDKKey    string        `json:"applovin_sdk_key,omitempty"`
+	AdsConfig         AdsConfig     `json:"ads_config,omitempty"`
+	AppConfig         AppConfig     `json:"app_config,omitempty"`
+	Contents          []AppContent  `json:"contents,omitempty"`
+	Categories        []AppCategory `json:"categories,omitempty"`
+	CreatedAt         time.Time     `json:"created_at,omitempty"`
+	UpdatedAt         *time.Time    `json:"updated_at,omitempty"`
 }
 
 type AdsConfig struct {
@@ -64,8 +70,10 @@ type AppConfig struct {
 }
 
 type AppString struct {
+	SetAsWallpaper      string `json:"set_as_wallpaper,omitempty"`
 	SetWallpaperHome    string `json:"set_wallpaper_home,omitempty"`
 	SetWallpaperLock    string `json:"set_wallpaper_lock,omitempty"`
+	WallpaperBoth       string `json:"wallpaper_both,omitempty"`
 	Cancel              string `json:"cancel,omitempty"`
 	SuccessSetWallpaper string `json:"success_set_wallpaper,omitempty"`
 	ExitPromptMessage   string `json:"exit_message,omitempty"`
@@ -74,7 +82,17 @@ type AppString struct {
 }
 
 type AppStyle struct {
-	ColorPrimary   string `json:"color_primary,omitempty"`
-	ColorSecondary string `json:"color_secondary,omitempty"`
-	ColorAccent    string `json:"color_accent,omitempty"`
+	ColorPrimary          string `json:"color_primary,omitempty"`
+	ColorPrimaryVariant   string `json:"color_primary_variant,omitempty"`
+	ColorOnPrimary        string `json:"color_on_primary,omitempty"`
+	ColorSecondary        string `json:"color_secondary,omitempty"`
+	ColorSecondaryVariant string `json:"color_secondary_variant,omitempty"`
+	ColorOnSecondary      string `json:"color_on_secondary,omitempty"`
+}
+
+type UploadFileParam struct {
+	FilePathLocal         string
+	FileName              string
+	DestinationFolderPath string
+	ReplaceIfNameExists   bool
 }

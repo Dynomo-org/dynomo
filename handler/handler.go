@@ -9,11 +9,13 @@ import (
 )
 
 type usecaseProvider interface {
-	GetAllMasterApp(ctx context.Context) ([]usecase.MasterApp, error)
-	GetMasterApp(ctx context.Context, appID string) (usecase.MasterApp, error)
-	NewMasterApp(ctx context.Context, request usecase.NewMasterAppRequest) error
-	SaveMasterApp(ctx context.Context, masterApp usecase.MasterApp) error
-	UpdateMasterApp(ctx context.Context, masterApp usecase.MasterApp) error
+	DeleteApp(ctx context.Context, appID string) error
+	GetAllApp(ctx context.Context) ([]usecase.App, error)
+	GetApp(ctx context.Context, appID string) (usecase.App, error)
+	NewApp(ctx context.Context, request usecase.NewAppRequest) error
+	SaveApp(ctx context.Context, App usecase.App) error
+	UpdateApp(ctx context.Context, App usecase.App) error
+	UpdateAppIcon(ctx context.Context, appID string, iconName, localPath string) error
 }
 
 type Handler struct {
@@ -25,13 +27,20 @@ func NewHandler(usecase usecaseProvider) *Handler {
 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
+	router.MaxMultipartMemory = 8 << 20
+
 	router.GET("/", h.WelcomeMessage)
 	router.GET("/_admin/ping", h.Ping)
-	router.GET("/_admin/apps", h.HandleGetAllMasterApp)
+	router.GET("/_admin/apps", h.HandleGetAllApp)
 
-	router.GET("/app", h.HandleGetMasterApp)
-	router.POST("/app", h.HandleCreateNewMasterApp)
-	router.PUT("/app", h.HandleUpdateMasterApp)
+	router.GET("/app", h.HandleGetApp)
+
+	router.POST("/app", h.HandleCreateNewApp)
+
+	router.PUT("/app", h.HandleUpdateApp)
+	router.PUT("/app/icon", h.HandleUpdateAppIcon)
+
+	router.DELETE("/app", h.HandleDeleteApp)
 }
 
 func WriteJson(ctx *gin.Context, data interface{}, err error, statusCode ...int) {

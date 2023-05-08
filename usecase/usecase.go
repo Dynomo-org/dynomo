@@ -7,16 +7,20 @@ import (
 
 type repoProvider interface {
 	// db provider
-	GetAllMasterAppFromDB(ctx context.Context) ([]repository.MasterApp, error)
-	GetMasterAppFromDB(ctx context.Context, appID string) (repository.MasterApp, error)
-	InsertNewMasterAppToDB(ctx context.Context, request repository.NewMasterAppRequest) error
-	InsertMasterAppToDB(ctx context.Context, master repository.MasterApp) error
-	UpdateMasterAppOnDB(ctx context.Context, masterApp repository.MasterApp) error
+	DeleteAppOnDB(ctx context.Context, appID string) error
+	GetAllAppFromDB(ctx context.Context) ([]repository.App, error)
+	GetAppFromDB(ctx context.Context, appID string) (repository.App, error)
+	InsertNewAppToDB(ctx context.Context, request repository.NewAppRequest) error
+	InsertAppToDB(ctx context.Context, master repository.App) error
+	UpdateAppOnDB(ctx context.Context, App repository.App) error
 
 	// cache provider
-	GetMasterAppFromCache(ctx context.Context, appID string) (repository.MasterApp, error)
-	InvalidateMasterAppOnCache(ctx context.Context, appID string) error
-	StoreMasterAppToCache(ctx context.Context, masterApp repository.MasterApp) error
+	GetAppFromCache(ctx context.Context, appID string) (repository.App, error)
+	InvalidateAppOnCache(ctx context.Context, appID string) error
+	StoreAppToCache(ctx context.Context, App repository.App) error
+
+	// github provider
+	UploadToGithub(ctx context.Context, param repository.UploadFileParam) (string, error)
 }
 
 type Usecase struct {

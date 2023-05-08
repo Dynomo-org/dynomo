@@ -22,7 +22,7 @@ const (
 	AdmobNativeAdTestID       = "ca-app-pub-3940256099942544/2247696110"
 )
 
-func (r *Repository) GetAllMasterAppFromDB(ctx context.Context) ([]MasterApp, error) {
+func (r *Repository) GetAllAppFromDB(ctx context.Context) ([]App, error) {
 	var result map[string]interface{}
 	err := r.db.NewRef(collectionMstApp).Get(ctx, &result)
 	if err != nil {
@@ -38,28 +38,31 @@ func (r *Repository) GetAllMasterAppFromDB(ctx context.Context) ([]MasterApp, er
 	}
 	sliceStr, _ := json.Marshal(slice)
 
-	var data []MasterApp
+	var data []App
 	err = json.Unmarshal([]byte(sliceStr), &data)
 	return data, err
 }
 
-func (r *Repository) GetMasterAppFromDB(ctx context.Context, appID string) (MasterApp, error) {
-	var result MasterApp
+func (r *Repository) GetAppFromDB(ctx context.Context, appID string) (App, error) {
+	var result App
 	err := r.db.NewRef(collectionMstApp).Child(appID).Get(ctx, &result)
 	return result, err
 }
 
-func (r *Repository) InsertMasterAppToDB(ctx context.Context, master MasterApp) error {
+func (r *Repository) InsertAppToDB(ctx context.Context, master App) error {
 	_, err := r.db.NewRef(collectionMstApp).Push(ctx, master)
 	return err
 }
 
-func (r *Repository) InsertNewMasterAppToDB(ctx context.Context, request NewMasterAppRequest) error {
+func (r *Repository) InsertNewAppToDB(ctx context.Context, request NewAppRequest) error {
 	appID := uuid.NewString()
-	master := MasterApp{
+	master := App{
 		AppID:          appID,
 		AppName:        request.AppName,
 		AppPackageName: request.PackageName,
+		VersionCode:    1,
+		VersionName:    "1.0",
+		IconURL:        "https://raw.githubusercontent.com/Dynapgen/master-storage-1/main/assets/default-icon.png",
 		CreatedAt:      time.Now(),
 		AdsConfig: AdsConfig{
 			PrimaryAd: Ad{
@@ -71,14 +74,39 @@ func (r *Repository) InsertNewMasterAppToDB(ctx context.Context, request NewMast
 				NativeAdID:       AdmobNativeAdTestID,
 			},
 		},
+		AppConfig: AppConfig{
+			Strings: AppString{
+				SetAsWallpaper:      "Set As Wallpaper",
+				SetWallpaperHome:    "Home Wallpaper",
+				SetWallpaperLock:    "Lockscreen Wallpaper",
+				WallpaperBoth:       "Home + Lock Screen",
+				Cancel:              "Cancel",
+				SuccessSetWallpaper: "Set Wallpaper Success",
+				ExitPromptMessage:   "Do You Want to Exit?",
+				NoConnectionMessage: "No Connection",
+				PrivacyPolicyText:   "",
+			},
+			Style: AppStyle{
+				ColorPrimary:          "#FFBB86FC",
+				ColorPrimaryVariant:   "#FF3700B3",
+				ColorSecondary:        "#FF03DAC5",
+				ColorSecondaryVariant: "#FF018786",
+				ColorOnPrimary:        "#FFFFFFFF",
+				ColorOnSecondary:      "#FF000000",
+			},
+		},
 	}
 	err := r.db.NewRef(collectionMstApp).Child(appID).Set(ctx, master)
 	return err
 }
 
-func (r *Repository) UpdateMasterAppOnDB(ctx context.Context, masterApp MasterApp) error {
+func (r *Repository) UpdateAppOnDB(ctx context.Context, app App) error {
 	return r.db.NewRef(collectionMstApp).Update(ctx,
 		map[string]interface{}{
-			masterApp.AppID: masterApp,
+			app.AppID: app,
 		})
+}
+
+func (r *Repository) DeleteAppOnDB(ctx context.Context, appID string) error {
+	return r.db.NewRef(collectionMstApp).Child(appID).Delete(ctx)
 }

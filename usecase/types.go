@@ -2,25 +2,27 @@ package usecase
 
 import "time"
 
-type AdType string
-
-type NewMasterAppRequest struct {
+type NewAppRequest struct {
 	AppName     string
 	PackageName string
 }
 
-type MasterApp struct {
-	AppID          string
-	AppName        string
-	AppPackageName string
-	AdmobAppID     string
-	AppLovinSDKKey string
-	AdsConfig      AdsConfig
-	AppConfig      AppConfig
-	Contents       []AppContent
-	Categories     []AppCategory
-	CreatedAt      time.Time
-	UpdatedAt      *time.Time
+type App struct {
+	AppID             string
+	AppName           string
+	AppPackageName    string
+	VersionCode       uint
+	VersionName       string
+	IconURL           string
+	PrivacyPolicyLink string
+	AdmobAppID        string
+	AppLovinSDKKey    string
+	AdsConfig         AdsConfig
+	AppConfig         AppConfig
+	Contents          []AppContent
+	Categories        []AppCategory
+	CreatedAt         time.Time
+	UpdatedAt         *time.Time
 }
 
 type AdsConfig struct {
@@ -66,8 +68,10 @@ type AppConfig struct {
 }
 
 type AppString struct {
+	SetAsWallpaper      string
 	SetWallpaperHome    string
 	SetWallpaperLock    string
+	WallpaperBoth       string
 	Cancel              string
 	SuccessSetWallpaper string
 	ExitPromptMessage   string
@@ -76,7 +80,10 @@ type AppString struct {
 }
 
 type AppStyle struct {
-	ColorPrimary   string
-	ColorSecondary string
-	ColorAccent    string
+	ColorPrimary          string
+	ColorPrimaryVariant   string
+	ColorOnPrimary        string
+	ColorSecondary        string
+	ColorSecondaryVariant string
+	ColorOnSecondary      string
 }

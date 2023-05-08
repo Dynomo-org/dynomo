@@ -7,7 +7,7 @@ run-release:
 	ENV=production ./dynapgen
 
 compose-build:
-	docker compose up -d --build
+	docker compose up -d
 
 compose-down:
 	docker compose down --remove-orphans
