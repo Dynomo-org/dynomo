@@ -14,7 +14,7 @@ import (
 var (
 	errorAppIDEmpty = errors.New("app_id is empty")
 
-	supportedFileTypes = map[string]struct{}{"png": struct{}{}, "jpg": struct{}{}, "jpeg": struct{}{}}
+	supportedFileTypes = map[string]struct{}{"png": {}, "jpg": {}, "jpeg": {}}
 )
 
 func (h *Handler) HandleCreateNewApp(ctx *gin.Context) {

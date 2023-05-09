@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -54,7 +55,8 @@ func (r *Repository) UploadToGithub(ctx context.Context, param UploadFileParam) 
 	}
 
 	fileNameSegments := strings.Split(param.FileName, ".")
-	filePathRemote := param.DestinationFolderPath + param.FileName
+	realFileName := fileNameSegments[0] + strconv.FormatInt(time.Now().Unix(), 10) + "." + fileNameSegments[1]
+	filePathRemote := param.DestinationFolderPath + realFileName
 
 	tree, _, err := r.github.Git.GetTree(ctx, ownerName, repoName, *ref.Object.SHA, true)
 	if err != nil {
