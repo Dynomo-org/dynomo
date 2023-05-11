@@ -245,3 +245,27 @@ func (app *App) updateWith(input App) {
 		app.AppConfig.Strings.PrivacyPolicyText = input.AppConfig.Strings.PrivacyPolicyText
 	}
 }
+
+type GenerateStoreParam struct {
+	AppID         string
+	FullName      string
+	Organization  string
+	Country       string
+	Alias         string
+	KeyPassword   string
+	StorePassword string
+}
+
+type Keystore struct {
+	Status       uint8
+	URL          string
+	ErrorMessage string
+}
+
+func convertKeystoreFromRepo(keystore repository.Keystore) Keystore {
+	return Keystore{
+		Status:       uint8(keystore.Status),
+		URL:          keystore.URL,
+		ErrorMessage: keystore.ErrorMessage,
+	}
+}
