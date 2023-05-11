@@ -9,11 +9,15 @@ import (
 )
 
 const (
-	redisTTL = 24 * time.Hour
+	defaultTTL  = 24 * 60 * 60
+	keystoreTTL = 5 * 60
+
+	fieldMasterApp = "master_app"
+	fieldKeystore  = "keystore"
 )
 
 func (r *Repository) GetAppFromCache(ctx context.Context, appID string) (App, error) {
-	result, err := r.redis.Get(ctx, appID).Result()
+	result, err := r.redis.HGet(ctx, appID, fieldMasterApp).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return App{}, nil
@@ -31,8 +35,32 @@ func (r *Repository) GetAppFromCache(ctx context.Context, appID string) (App, er
 	return app, nil
 }
 
+func (r *Repository) GetKeystoreFromCache(ctx context.Context, appID string) (Keystore, error) {
+	result, err := r.redis.HGet(ctx, appID, fieldKeystore).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return Keystore{}, nil
+		}
+
+		return Keystore{}, err
+	}
+
+	var keystore Keystore
+	err = json.Unmarshal([]byte(result), &keystore)
+	if err != nil {
+		return Keystore{}, nil
+	}
+
+	return keystore, nil
+}
+
 func (r *Repository) InvalidateAppOnCache(ctx context.Context, appID string) error {
-	result := r.redis.Del(ctx, appID)
+	result := r.redis.HDel(ctx, appID, fieldMasterApp)
+	return result.Err()
+}
+
+func (r *Repository) InvalidateKeystoreOnCache(ctx context.Context, appID string) error {
+	result := r.redis.HDel(ctx, appID, fieldKeystore)
 	return result.Err()
 }
 
@@ -41,6 +69,23 @@ func (r *Repository) StoreAppToCache(ctx context.Context, App App) error {
 	if err != nil {
 		return err
 	}
-	result := r.redis.SetEx(ctx, App.AppID, string(marshalled), redisTTL)
-	return result.Err()
+
+	return r.HSetEX(ctx, App.AppID, fieldMasterApp, string(marshalled), defaultTTL)
+}
+
+func (r *Repository) StoreKeystoreToCache(ctx context.Context, appID string, keystore Keystore) error {
+	marshalled, err := json.Marshal(keystore)
+	if err != nil {
+		return err
+	}
+
+	return r.HSetEX(ctx, appID, fieldKeystore, string(marshalled), keystoreTTL)
+}
+
+func (r *Repository) HSetEX(ctx context.Context, key, field string, value interface{}, expireSecond int64) error {
+	_, err := r.redis.HSet(ctx, key, field, value).Result()
+	if err != nil {
+		return err
+	}
+	return r.redis.Expire(ctx, key, time.Duration(expireSecond)*time.Second).Err()
 }

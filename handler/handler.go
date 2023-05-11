@@ -12,6 +12,8 @@ type usecaseProvider interface {
 	DeleteApp(ctx context.Context, appID string) error
 	GetAllApp(ctx context.Context) ([]usecase.App, error)
 	GetApp(ctx context.Context, appID string) (usecase.App, error)
+	GetGenerateKeystoreStatus(ctx context.Context, appID string) (usecase.Keystore, error)
+	GenerateKeystore(ctx context.Context, param usecase.GenerateStoreParam) error
 	NewApp(ctx context.Context, request usecase.NewAppRequest) error
 	SaveApp(ctx context.Context, App usecase.App) error
 	UpdateApp(ctx context.Context, App usecase.App) error
@@ -32,10 +34,11 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/", h.WelcomeMessage)
 	router.GET("/_admin/ping", h.Ping)
 	router.GET("/_admin/apps", h.HandleGetAllApp)
-
 	router.GET("/app", h.HandleGetApp)
+	router.GET("/keystore", h.HandleGetGenerateKeystoreStatus)
 
 	router.POST("/app", h.HandleCreateNewApp)
+	router.POST("/keystore", h.HandleGenerateKeystore)
 
 	router.PUT("/app", h.HandleUpdateApp)
 	router.PUT("/app/icon", h.HandleUpdateAppIcon)

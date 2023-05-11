@@ -16,8 +16,11 @@ type repoProvider interface {
 
 	// cache provider
 	GetAppFromCache(ctx context.Context, appID string) (repository.App, error)
+	GetKeystoreFromCache(ctx context.Context, appID string) (repository.Keystore, error)
 	InvalidateAppOnCache(ctx context.Context, appID string) error
+	InvalidateKeystoreOnCache(ctx context.Context, appID string) error
 	StoreAppToCache(ctx context.Context, App repository.App) error
+	StoreKeystoreToCache(ctx context.Context, appID string, keystore repository.Keystore) error
 
 	// github provider
 	UploadToGithub(ctx context.Context, param repository.UploadFileParam) (string, error)
