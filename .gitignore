@@ -2,3 +2,4 @@ config
 dynapgen
 *.env
 assets
+*key*
