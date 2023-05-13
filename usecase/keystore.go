@@ -54,10 +54,9 @@ func (uc *Usecase) generateKeystoreAsync(ctx context.Context, param GenerateStor
 		err        error
 	)
 	defer func() {
-		if folderPath != "" {
+		if folderPath != "" && err == nil {
 			err = os.RemoveAll(folderPath)
 		}
-
 		if err != nil {
 			keystore = repository.Keystore{
 				Status:       repository.BuildStatusFail,
@@ -90,7 +89,7 @@ func (uc *Usecase) generateKeystoreAsync(ctx context.Context, param GenerateStor
 		return
 	}
 
-	err = os.Mkdir(folderPath, 0755)
+	err = os.MkdirAll(folderPath, 0755)
 	if err != nil {
 		log.Error(folderPath, err, "os.Mkdir() got error - generateKeystoreAsync")
 		return
