@@ -3,23 +3,25 @@ package main
 import (
 	"context"
 	"dynapgen/handler"
-	"dynapgen/repository"
+	repoDB "dynapgen/repository/db"
+	repoGithub "dynapgen/repository/github"
+	repoRedis "dynapgen/repository/redis"
 	"dynapgen/usecase"
 	"fmt"
 	"log"
 	"time"
 
-	firebase "firebase.google.com/go/v4"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v52/github"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
-	"google.golang.org/api/option"
 )
 
 const (
-	maxRedisConnectRetryAttempts = 5
+	maxRedisConnectRetryAttempts = 1
 )
 
 type Server struct {
@@ -31,8 +33,9 @@ func NewServer(handler *handler.Handler) *Server {
 }
 
 func main() {
-	viper.SetConfigName("app")
-	viper.SetConfigType("dotenv")
+	ctx := context.Background()
+
+	viper.SetConfigFile(".env")
 	viper.AddConfigPath(".")
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
@@ -41,37 +44,32 @@ func main() {
 	}
 
 	// init redis connection
-	redisAddr := "localhost:6379"
+	redisAddr := viper.GetString("REDIS_ADDR")
 	if viper.GetString("ENV") == "production" {
-		redisAddr = "redis:6379"
 		gin.SetMode(gin.ReleaseMode)
 	}
 	redisOpt := &redis.Options{
 		Addr: redisAddr,
 	}
-	redisConn := connectRedis(redisOpt)
+	redisConn := initRedis(redisOpt)
 	if redisConn == nil {
-		log.Fatal("error connecting to redis")
+		log.Fatal("error connecting to redis - ", err)
 	}
 	fmt.Println("connected to redis")
 
-	// init firebase connection
-	ctx := context.Background()
-	opt := option.WithCredentialsFile("config/adc.json")
-	conf := &firebase.Config{
-		DatabaseURL: "https://baim-dynamic-app-default-rtdb.firebaseio.com/",
-	}
-	firebaseConn, err := firebase.NewApp(ctx, conf, opt)
+	// init db
+	dbConnectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		viper.GetString("DB_HOST"),
+		viper.GetString("DB_PORT"),
+		viper.GetString("DB_USERNAME"),
+		viper.GetString("DB_PASSWORD"),
+		viper.GetString("DB_NAME"),
+	)
+	dbClient, err := initDB("postgres", dbConnectionString)
 	if err != nil {
-		log.Fatalf("error connecting to firebase")
+		log.Fatal("error connecting to DB - ", err)
 	}
-
-	// init db connection
-	dbConn, err := firebaseConn.Database(ctx)
-	if err != nil {
-		log.Fatalf("error connecting to database")
-	}
-	fmt.Println("connected to database")
+	fmt.Println("connected to DB")
 
 	// init github connection
 	githubClientKey := viper.GetString("GITHUB_CLIENT_KEY")
@@ -79,8 +77,10 @@ func main() {
 	fmt.Println("connected to github")
 
 	// init app layers
-	repository := repository.NewRepository(redisConn, dbConn, githubConn)
-	usecase := usecase.NewUsecase(repository)
+	repoDB := repoDB.New(dbClient)
+	repoRedis := repoRedis.New(redisConn)
+	repoGithub := repoGithub.New(githubConn)
+	usecase := usecase.NewUsecase(repoDB, repoRedis, repoGithub)
 	handler := handler.NewHandler(usecase)
 
 	r := gin.Default()
@@ -90,9 +90,9 @@ func main() {
 }
 
 // init redis with retry mechanism
-func connectRedis(redisOpt *redis.Options) *redis.Client {
+func initRedis(redisOpt *redis.Options) *redis.Client {
 	for i := 0; i < maxRedisConnectRetryAttempts; i++ {
-		fmt.Printf("Trying to connect to redis (%d/%d)\n", i+1, maxRedisConnectRetryAttempts)
+		fmt.Printf("Connecting to redis (%d/%d)\n", i+1, maxRedisConnectRetryAttempts)
 		if client := redis.NewClient(redisOpt); client != nil {
 			return client
 		}
@@ -100,4 +100,20 @@ func connectRedis(redisOpt *redis.Options) *redis.Client {
 	}
 
 	return nil
+}
+
+func initDB(driver, connectionString string) (*sqlx.DB, error) {
+	var connectingError error
+	for i := 0; i < maxRedisConnectRetryAttempts; i++ {
+		fmt.Printf("Connecting to DB (%d/%d)\n", i+1, maxRedisConnectRetryAttempts)
+		db, err := sqlx.Connect("postgres", connectionString)
+		if err != nil {
+			connectingError = err
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		return db, nil
+	}
+
+	return nil, connectingError
 }

@@ -1,4 +1,4 @@
-package repository
+package redis
 
 import (
 	"context"
@@ -12,12 +12,12 @@ const (
 	defaultTTL  = 24 * 60 * 60
 	keystoreTTL = 5 * 60
 
-	fieldMasterApp = "master_app"
-	fieldKeystore  = "keystore"
+	fieldApp      = "app"
+	fieldKeystore = "keystore"
 )
 
-func (r *Repository) GetAppFromCache(ctx context.Context, appID string) (App, error) {
-	result, err := r.redis.HGet(ctx, appID, fieldMasterApp).Result()
+func (r *Repository) GetApp(ctx context.Context, appID string) (App, error) {
+	result, err := r.redis.HGet(ctx, appID, fieldApp).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return App{}, nil
@@ -35,7 +35,7 @@ func (r *Repository) GetAppFromCache(ctx context.Context, appID string) (App, er
 	return app, nil
 }
 
-func (r *Repository) GetKeystoreFromCache(ctx context.Context, appID string) (Keystore, error) {
+func (r *Repository) GetKeystore(ctx context.Context, appID string) (Keystore, error) {
 	result, err := r.redis.HGet(ctx, appID, fieldKeystore).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -54,26 +54,26 @@ func (r *Repository) GetKeystoreFromCache(ctx context.Context, appID string) (Ke
 	return keystore, nil
 }
 
-func (r *Repository) InvalidateAppOnCache(ctx context.Context, appID string) error {
-	result := r.redis.HDel(ctx, appID, fieldMasterApp)
+func (r *Repository) InvalidateApp(ctx context.Context, appID string) error {
+	result := r.redis.HDel(ctx, appID, fieldApp)
 	return result.Err()
 }
 
-func (r *Repository) InvalidateKeystoreOnCache(ctx context.Context, appID string) error {
+func (r *Repository) InvalidateKeystore(ctx context.Context, appID string) error {
 	result := r.redis.HDel(ctx, appID, fieldKeystore)
 	return result.Err()
 }
 
-func (r *Repository) StoreAppToCache(ctx context.Context, App App) error {
+func (r *Repository) InsertApp(ctx context.Context, App App) error {
 	marshalled, err := json.Marshal(App)
 	if err != nil {
 		return err
 	}
 
-	return r.HSetEX(ctx, App.AppID, fieldMasterApp, string(marshalled), defaultTTL)
+	return r.HSetEX(ctx, App.AppID, fieldApp, string(marshalled), defaultTTL)
 }
 
-func (r *Repository) StoreKeystoreToCache(ctx context.Context, appID string, keystore Keystore) error {
+func (r *Repository) InsertKeystore(ctx context.Context, appID string, keystore Keystore) error {
 	marshalled, err := json.Marshal(keystore)
 	if err != nil {
 		return err

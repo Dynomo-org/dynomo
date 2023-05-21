@@ -2,7 +2,8 @@ package usecase
 
 import (
 	"context"
-	"dynapgen/repository"
+	"dynapgen/repository/github"
+	"dynapgen/repository/redis"
 	"dynapgen/utils/log"
 	"fmt"
 	"os"
@@ -12,9 +13,9 @@ import (
 )
 
 func (uc *Usecase) GetGenerateKeystoreStatus(ctx context.Context, appID string) (Keystore, error) {
-	keystore, err := uc.repo.GetKeystoreFromCache(ctx, appID)
+	keystore, err := uc.cache.GetKeystore(ctx, appID)
 	if err != nil {
-		log.Error(map[string]interface{}{"app_id": appID}, err, "uc.repo.GetKeystoreFromCache() got error - GetGenerateKeystoreStatus")
+		log.Error(map[string]interface{}{"app_id": appID}, err, "uc.cache.GetKeystore() got error - GetGenerateKeystoreStatus")
 		return Keystore{}, err
 	}
 
@@ -22,19 +23,19 @@ func (uc *Usecase) GetGenerateKeystoreStatus(ctx context.Context, appID string) 
 }
 
 func (uc *Usecase) GenerateKeystore(ctx context.Context, param GenerateStoreParam) error {
-	err := uc.repo.InvalidateKeystoreOnCache(ctx, param.AppID)
+	err := uc.cache.InvalidateKeystore(ctx, param.AppID)
 	if err != nil {
-		log.Error(param, err, "uc.repo.GetKeystoreFromCache() got error - generateKeystoreAsync")
+		log.Error(param, err, "uc.cache.InvalidateKeystore() got error - generateKeystoreAsync")
 		return err
 	}
 
-	keystore := repository.Keystore{
-		Status: repository.BuildStatusPending,
+	keystore := redis.Keystore{
+		Status: redis.BuildStatusPending,
 	}
 
-	err = uc.repo.StoreKeystoreToCache(ctx, param.AppID, keystore)
+	err = uc.cache.InsertKeystore(ctx, param.AppID, keystore)
 	if err != nil {
-		log.Error(param, err, "uc.repo.StoreKeystoreToCache() got error - GenerateKeystore")
+		log.Error(param, err, "uc.repo.InsertKeystore() got error - GenerateKeystore")
 		return err
 	}
 
@@ -49,7 +50,7 @@ func (uc *Usecase) GenerateKeystore(ctx context.Context, param GenerateStorePara
 
 func (uc *Usecase) generateKeystoreAsync(ctx context.Context, param GenerateStoreParam) {
 	var (
-		keystore   repository.Keystore
+		keystore   redis.Keystore
 		folderPath string
 		err        error
 	)
@@ -58,27 +59,27 @@ func (uc *Usecase) generateKeystoreAsync(ctx context.Context, param GenerateStor
 			err = os.RemoveAll(folderPath)
 		}
 		if err != nil {
-			keystore = repository.Keystore{
-				Status:       repository.BuildStatusFail,
+			keystore = redis.Keystore{
+				Status:       redis.BuildStatusFail,
 				ErrorMessage: err.Error(),
 			}
-			err := uc.repo.StoreKeystoreToCache(ctx, param.AppID, keystore)
+			err := uc.cache.InsertKeystore(ctx, param.AppID, keystore)
 			if err != nil {
-				log.Error(param, err, "uc.repo.StoreKeystoreToCache() got error - generateKeystoreAsync")
+				log.Error(param, err, "uc.repo.InsertKeystore() got error - generateKeystoreAsync")
 			}
 		}
 	}()
 
-	keystore, err = uc.repo.GetKeystoreFromCache(ctx, param.AppID)
+	keystore, err = uc.cache.GetKeystore(ctx, param.AppID)
 	if err != nil {
-		log.Error(param, err, "uc.repo.GetKeystoreFromCache() got error - generateKeystoreAsync")
+		log.Error(param, err, "uc.repo.GetKeystore() got error - generateKeystoreAsync")
 		return
 	}
 
-	keystore.Status = repository.BuildStatusInProgress
-	err = uc.repo.StoreKeystoreToCache(ctx, param.AppID, keystore)
+	keystore.Status = redis.BuildStatusInProgress
+	err = uc.cache.InsertKeystore(ctx, param.AppID, keystore)
 	if err != nil {
-		log.Error(param, err, "uc.repo.StoreKeystoreToCache() got error - generateKeystoreAsync")
+		log.Error(param, err, "uc.repo.InsertKeystore() got error - generateKeystoreAsync")
 		return
 	}
 
@@ -105,24 +106,24 @@ func (uc *Usecase) generateKeystoreAsync(ctx context.Context, param GenerateStor
 		return
 	}
 
-	uploadGithubParam := repository.UploadFileParam{
+	uploadGithubParam := github.UploadFileParam{
 		FilePathLocal:         filePath,
 		FileName:              "key.keystore",
 		DestinationFolderPath: param.AppID + "/",
 		ReplaceIfNameExists:   true,
 	}
 
-	fileURL, err := uc.repo.UploadToGithub(ctx, uploadGithubParam)
+	fileURL, err := uc.github.Upload(ctx, uploadGithubParam)
 	if err != nil {
-		log.Error(uploadGithubParam, err, "uc.repo.UploadToGithub() got error - generateKeystoreAsync")
+		log.Error(uploadGithubParam, err, "uc.repo.Upload() got error - generateKeystoreAsync")
 		return
 	}
 
-	keystore.Status = repository.BuildStatusSuccess
+	keystore.Status = redis.BuildStatusSuccess
 	keystore.URL = fileURL
-	err = uc.repo.StoreKeystoreToCache(ctx, param.AppID, keystore)
+	err = uc.cache.InsertKeystore(ctx, param.AppID, keystore)
 	if err != nil {
-		log.Error(param, err, "uc.repo.StoreKeystoreToCache() got error - generateKeystoreAsync")
+		log.Error(param, err, "uc.cache.InsertKeystore() got error - generateKeystoreAsync")
 		return
 	}
 
