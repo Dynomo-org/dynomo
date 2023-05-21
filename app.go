@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	maxRedisConnectRetryAttempts = 1
+	maxConnectionRetryAttempts = 5
 )
 
 type Server struct {
@@ -91,8 +91,8 @@ func main() {
 
 // init redis with retry mechanism
 func initRedis(redisOpt *redis.Options) *redis.Client {
-	for i := 0; i < maxRedisConnectRetryAttempts; i++ {
-		fmt.Printf("Connecting to redis (%d/%d)\n", i+1, maxRedisConnectRetryAttempts)
+	for i := 0; i < maxConnectionRetryAttempts; i++ {
+		fmt.Printf("Connecting to redis (%d/%d)\n", i+1, maxConnectionRetryAttempts)
 		if client := redis.NewClient(redisOpt); client != nil {
 			return client
 		}
@@ -104,8 +104,8 @@ func initRedis(redisOpt *redis.Options) *redis.Client {
 
 func initDB(driver, connectionString string) (*sqlx.DB, error) {
 	var connectingError error
-	for i := 0; i < maxRedisConnectRetryAttempts; i++ {
-		fmt.Printf("Connecting to DB (%d/%d)\n", i+1, maxRedisConnectRetryAttempts)
+	for i := 0; i < maxConnectionRetryAttempts; i++ {
+		fmt.Printf("Connecting to DB (%d/%d)\n", i+1, maxConnectionRetryAttempts)
 		db, err := sqlx.Connect("postgres", connectionString)
 		if err != nil {
 			connectingError = err
