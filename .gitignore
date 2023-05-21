@@ -1,5 +1,6 @@
-config
+/config
 dynapgen
 *.env
-assets
-*key*
+/assets
+/db
+ssh*

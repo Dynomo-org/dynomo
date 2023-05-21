@@ -1,30 +1,17 @@
 package handler
 
 import (
-	"context"
 	"dynapgen/usecase"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type usecaseProvider interface {
-	DeleteApp(ctx context.Context, appID string) error
-	GetAllApp(ctx context.Context) ([]usecase.App, error)
-	GetApp(ctx context.Context, appID string) (usecase.App, error)
-	GetGenerateKeystoreStatus(ctx context.Context, appID string) (usecase.Keystore, error)
-	GenerateKeystore(ctx context.Context, param usecase.GenerateStoreParam) error
-	NewApp(ctx context.Context, request usecase.NewAppRequest) error
-	SaveApp(ctx context.Context, App usecase.App) error
-	UpdateApp(ctx context.Context, App usecase.App) error
-	UpdateAppIcon(ctx context.Context, appID string, iconName, localPath string) error
-}
-
 type Handler struct {
-	usecase usecaseProvider
+	usecase *usecase.Usecase
 }
 
-func NewHandler(usecase usecaseProvider) *Handler {
+func NewHandler(usecase *usecase.Usecase) *Handler {
 	return &Handler{usecase: usecase}
 }
 
@@ -33,7 +20,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	router.GET("/", h.WelcomeMessage)
 	router.GET("/_admin/ping", h.Ping)
-	router.GET("/_admin/apps", h.HandleGetAllApp)
+	router.GET("/_admin/apps", h.HandleGetAllApps)
 	router.GET("/app", h.HandleGetApp)
 	router.GET("/keystore", h.HandleGetGenerateKeystoreStatus)
 

@@ -1,4 +1,4 @@
-package repository
+package github
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func (r *Repository) getRef(ctx context.Context) (*github.Reference, error) {
 	return ref, nil
 }
 
-func (r *Repository) UploadToGithub(ctx context.Context, param UploadFileParam) (string, error) {
+func (r *Repository) Upload(ctx context.Context, param UploadFileParam) (string, error) {
 	repoName := viper.GetString("GITHUB_REPO_NAME")
 	ref, err := r.getRef(ctx)
 	if err != nil {

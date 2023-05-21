@@ -1,8 +1,6 @@
-package repository
+package redis
 
-import (
-	"time"
-)
+import "time"
 
 type BuildStatus uint8
 
@@ -12,11 +10,6 @@ const (
 	BuildStatusInProgress
 	BuildStatusPending
 )
-
-type NewAppRequest struct {
-	AppName     string
-	PackageName string
-}
 
 type App struct {
 	AppID             string        `json:"id,omitempty"`
@@ -97,13 +90,6 @@ type AppStyle struct {
 	ColorSecondary        string `json:"color_secondary,omitempty"`
 	ColorSecondaryVariant string `json:"color_secondary_variant,omitempty"`
 	ColorOnSecondary      string `json:"color_on_secondary,omitempty"`
-}
-
-type UploadFileParam struct {
-	FilePathLocal         string
-	FileName              string
-	DestinationFolderPath string
-	ReplaceIfNameExists   bool
 }
 
 type Keystore struct {
