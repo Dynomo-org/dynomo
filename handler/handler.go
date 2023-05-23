@@ -19,18 +19,23 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.MaxMultipartMemory = 8 << 20
 
 	router.GET("/", h.WelcomeMessage)
-	router.GET("/_admin/ping", h.Ping)
+
+	router.GET("/_admin/ping", checkUserAuthorization, h.Ping)
 	router.GET("/_admin/apps", h.HandleGetAllApps)
+
 	router.GET("/app", h.HandleGetApp)
-	router.GET("/keystore", h.HandleGetGenerateKeystoreStatus)
-
 	router.POST("/app", h.HandleCreateNewApp)
-	router.POST("/keystore", h.HandleGenerateKeystore)
-
 	router.PUT("/app", h.HandleUpdateApp)
+	router.DELETE("/app", h.HandleDeleteApp)
+
 	router.PUT("/app/icon", h.HandleUpdateAppIcon)
 
-	router.DELETE("/app", h.HandleDeleteApp)
+	router.GET("/keystore", h.HandleGetGenerateKeystoreStatus)
+	router.POST("/keystore", h.HandleGenerateKeystore)
+
+	router.GET("/user/info", checkUserAuthorization, h.HandleGetUserInfo)
+	router.POST("/user/login", h.HandleLoginUser)
+	router.POST("/user/register", h.HandleRegisterUser)
 }
 
 func WriteJson(ctx *gin.Context, data interface{}, err error, statusCode ...int) {
@@ -39,7 +44,6 @@ func WriteJson(ctx *gin.Context, data interface{}, err error, statusCode ...int)
 	}
 	code := http.StatusOK
 	if data != nil {
-		code = http.StatusOK
 		payload["data"] = data
 	}
 
