@@ -1,12 +1,14 @@
 package db
 
 const (
-	queryDeleteApp    = "delete from apps where app_id = $1"
-	queryGetAllApps   = `select count(*) over() as total, * from apps`
-	queryGetApp       = `select * from apps where id = $1`
-	queryGetAppString = `select * from app_strings where app_id = $1`
-	queryGetAppStyle  = `select * from app_styles where app_id = $1`
-	queryInsertApp    = `
+	queryDeleteApp             = `delete from apps where app_id = $1`
+	queryGetAppsByUserID       = `select count(*) over() as total, * from apps where owner_id = $1`
+	queryGetApp                = `select * from apps where id = $1`
+	queryGetAppString          = `select * from app_strings where app_id = $1`
+	queryGetAppStyle           = `select * from app_styles where app_id = $1`
+	queryGetAppContentsByAppID = `select * from app_contents where app_id = $1`
+	queryGetAppAdsByAppID      = `select * from app_ads where app_id = $1 order by created_at desc`
+	queryInsertApp             = `
 		insert into apps(
 			id,
 			owner_id,
@@ -57,8 +59,33 @@ const (
 			:updated_at
 		)
 	`
+	queryInsertAppAds = `
+		insert into app_ads(
+			id,
+			type,
+			open_ad_id,
+			banner_ad_id,
+			interstitial_ad_id,
+			reward_ad_id,
+			native_ad_id,
+			order,
+			created_at,
+			updated_at,
+		) values (
+			:id,
+			:type,
+			:open_ad_id,
+			:banner_ad_id,
+			:interstitial_ad_id,
+			:reward_ad_id,
+			:native_ad_id,
+			:order,
+			:created_at,
+			:updated_at,
+		)
+	`
 	queryUpdateApp = `
-		update apps set(
+		update apps set
 			owner_id = :owner_id,
 			name = :name,
 			package_name = :package_name,
@@ -81,6 +108,6 @@ const (
 			interstitial_interval_second = :interstitial_interval_second,
 			created_at = :created_at,
 			updated_at = :updated_at
-		) where id = :id
+		 where id = :id
 	`
 )

@@ -12,6 +12,16 @@ type NewAppRequest struct {
 	PackageName string `json:"package_name"`
 }
 
+type NewAppAdsRequest struct {
+	AppID            string `json:"app_id"`
+	Type             uint   `json:"type"`
+	OpenAdID         string `json:"open_ad_id"`
+	BannerAdID       string `json:"banner_ad_id"`
+	InterstitialAdID string `json:"interstitial_ad_id"`
+	RewardAdID       string `json:"reward_ad_id"`
+	NativeAdID       string `json:"native_ad_id"`
+}
+
 type App struct {
 	Total                      int         `json:"total"`
 	ID                         string      `json:"id"`

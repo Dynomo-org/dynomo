@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"dynapgen/constants"
 	"dynapgen/utils/tokenizer"
 	"errors"
 	"net/http"
@@ -43,6 +44,6 @@ func checkUserAuthorization(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Set("user_id", claims["id"])
+	ctx.Set(constants.ContextKeyUserID, claims["id"])
 	ctx.Next()
 }

@@ -21,14 +21,16 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/", h.WelcomeMessage)
 
 	router.GET("/_admin/ping", checkUserAuthorization, h.Ping)
-	router.GET("/_admin/apps", h.HandleGetAllApps)
 
-	router.GET("/app", h.HandleGetApp)
-	router.POST("/app", h.HandleCreateNewApp)
-	router.PUT("/app", h.HandleUpdateApp)
-	router.DELETE("/app", h.HandleDeleteApp)
+	router.GET("/apps", checkUserAuthorization, h.HandleGetAllApps)
+	router.GET("/app", checkUserAuthorization, h.HandleGetApp)
+	router.POST("/app", checkUserAuthorization, h.HandleCreateNewApp)
+	router.PUT("/app", checkUserAuthorization, h.HandleUpdateApp)
+	router.DELETE("/app", checkUserAuthorization, h.HandleDeleteApp)
 
-	router.PUT("/app/icon", h.HandleUpdateAppIcon)
+	router.PUT("/app/icon", checkUserAuthorization, h.HandleUpdateAppIcon)
+
+	router.GET("/ads", checkUserAuthorization, h.HandleGetAppAds)
 
 	router.GET("/keystore", h.HandleGetGenerateKeystoreStatus)
 	router.POST("/keystore", h.HandleGenerateKeystore)

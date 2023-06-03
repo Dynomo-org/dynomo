@@ -1,18 +1,15 @@
 package handler
 
 import (
+	"dynapgen/constants"
 	"dynapgen/usecase"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	contextKeyUserID = "user_id"
-)
-
 func (h *Handler) HandleGetUserInfo(ctx *gin.Context) {
-	userID := ctx.GetString(contextKeyUserID)
+	userID := ctx.GetString(constants.ContextKeyUserID)
 	result, err := h.usecase.GetUserInfo(ctx, userID)
 	if err != nil {
 		WriteJson(ctx, nil, err, http.StatusInternalServerError)
