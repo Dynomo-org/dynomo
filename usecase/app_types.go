@@ -1,6 +1,9 @@
 package usecase
 
 import (
+	"dynapgen/constants"
+	"dynapgen/repository/db"
+	"dynapgen/repository/redis"
 	"errors"
 	"time"
 )
@@ -19,6 +22,17 @@ type NewAppRequest struct {
 	AppName     string
 	PackageName string
 	OwnerID     string
+}
+
+type NewAppAdsRequest struct {
+	AppID            string
+	Type             constants.AdType
+	OpenAdID         string
+	BannerAdID       string
+	InterstitialAdID string
+	RewardAdID       string
+	NativeAdID       string
+	Order            uint8
 }
 
 type App struct {
@@ -48,41 +62,74 @@ type App struct {
 	UpdatedAt                  *time.Time  `json:"updated_at"`
 }
 
+type AppAds struct {
+	ID               string           `json:"id"`
+	AppID            string           `json:"-"`
+	Type             constants.AdType `json:"type"`
+	OpenAdID         string           `json:"open_ad_id"`
+	BannerAdID       string           `json:"banner_ad_id"`
+	InterstitialAdID string           `json:"interstitial_ad_id"`
+	RewardAdID       string           `json:"reward_ad_id"`
+	NativeAdID       string           `json:"native_ad_id"`
+	Order            uint8            `json:"order"`
+	CreatedAt        time.Time        `json:"created_at"`
+	UpdatedAt        *time.Time       `json:"updated_at"`
+}
+
+type AppFull struct {
+	ID                string       `json:"id"`
+	OwnerID           string       `json:"owner_id"`
+	Name              string       `json:"name"`
+	PackageName       string       `json:"package_name"`
+	Type              uint8        `json:"type"`
+	AdmobAppID        string       `json:"admob_app_id"`
+	AppLovinSDKKey    string       `json:"app_lovin_sdk_key"`
+	Version           int          `json:"version"`
+	VersionCode       string       `json:"version_code"`
+	IconURL           string       `json:"icon_url"`
+	PrivacyPolicyLink string       `json:"privacy_policy_link"`
+	AppConfig         AppConfig    `json:"app_config"`
+	AdsConfig         AdsConfig    `json:"ads_config"`
+	Content           []AppContent `json:"content"`
+	CreatedAt         time.Time    `json:"created_at"`
+	UpdatedAt         *time.Time   `json:"updated_at"`
+}
+
 type AdsConfig struct {
-	EnableOpenAd         bool
-	EnableBannerAd       bool
-	EnableInterstitialAd bool
-	EnableRewardAd       bool
-	EnableNativeAd       bool
-
-	PrimaryAd   Ad
-	SecondaryAd Ad
-	TertiaryAd  Ad
-
-	InterstitialIntervalSecond int
-	TestDevices                []string
+	EnableOpen                 bool    `json:"enable_open"`
+	EnableBanner               bool    `json:"enable_banner"`
+	EnableInterstitial         bool    `json:"enable_interstitial"`
+	EnableNative               bool    `json:"enable_native"`
+	EnableReward               bool    `json:"enable_reward"`
+	InterstitialIntervalSecond int     `json:"interstitial_interval_second"`
+	Ads                        []AppAd `json:"ads"`
 }
 
-type Ad struct {
-	AdType           uint8
-	OpenAdID         string
-	BannerAdID       string
-	InterstitialAdID string
-	RewardAdID       string
-	NativeAdID       string
+type AppConfig struct {
+	Strings interface{} `json:"strings"`
+	Style   AppStyle    `json:"style"`
 }
 
-type AppCategory struct {
-	ID       string
-	Category string
+type AppStyle struct {
+	ColorPrimary        string `json:"color_primary"`
+	ColorPrimaryVariant string `json:"color_primary_variant"`
+	ColorOnPrimary      string `json:"color_on_primary"`
+}
+
+type AppAd struct {
+	Type             constants.AdType `json:"type"`
+	OpenAdID         string           `json:"open_ad_id"`
+	BannerAdID       string           `json:"banner_ad_id"`
+	InterstitialAdID string           `json:"interstitial_ad_id"`
+	RewardAdID       string           `json:"reward_ad_id"`
+	NativeAdID       string           `json:"native_ad_id"`
 }
 
 type AppContent struct {
-	ID          string
-	Title       string
-	Description string
-	Content     string
-	CategoryID  string
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Content     string `json:"content"`
 }
 
 type GetAppListParam struct {
@@ -164,4 +211,96 @@ func (app *App) updateWith(input App) {
 	if input.InterstitialIntervalSecond != app.InterstitialIntervalSecond {
 		app.InterstitialIntervalSecond = input.InterstitialIntervalSecond
 	}
+}
+
+func buildAppFull(app db.App, appAds []db.AppAds, appContents []db.AppContent) AppFull {
+	result := AppFull{
+		ID:                app.ID,
+		OwnerID:           app.OwnerID,
+		Name:              app.Name,
+		PackageName:       app.PackageName,
+		Type:              app.Type,
+		AdmobAppID:        app.AdmobAppID,
+		AppLovinSDKKey:    app.AppLovinSDKKey,
+		Version:           app.Version,
+		VersionCode:       app.VersionCode,
+		IconURL:           app.IconURL,
+		PrivacyPolicyLink: app.PrivacyPolicyLink,
+		AppConfig: AppConfig{
+			Strings: app.Strings,
+			Style: AppStyle{
+				ColorPrimary:        app.ColorPrimary,
+				ColorPrimaryVariant: app.ColorPrimaryVariant,
+				ColorOnPrimary:      app.ColorOnPrimary,
+			},
+		},
+		AdsConfig: AdsConfig{
+			EnableOpen:                 app.EnableOpen,
+			EnableBanner:               app.EnableBanner,
+			EnableInterstitial:         app.EnableInterstitial,
+			EnableNative:               app.EnableNative,
+			EnableReward:               app.EnableReward,
+			InterstitialIntervalSecond: app.InterstitialIntervalSecond,
+		},
+		CreatedAt: app.CreatedAt,
+		UpdatedAt: app.UpdatedAt,
+	}
+
+	ads := make([]AppAd, len(appAds))
+	for index, ad := range appAds {
+		ads[index] = AppAd{
+			Type:             ad.Type,
+			OpenAdID:         ad.OpenAdID,
+			BannerAdID:       ad.BannerAdID,
+			InterstitialAdID: ad.InterstitialAdID,
+			RewardAdID:       ad.RewardAdID,
+			NativeAdID:       ad.NativeAdID,
+		}
+	}
+	result.AdsConfig.Ads = ads
+
+	contents := make([]AppContent, len(appContents))
+	for index, content := range appContents {
+		contents[index] = AppContent(content)
+	}
+	result.Content = contents
+
+	return result
+}
+
+func convertAppFullFromCache(cached redis.App) AppFull {
+	result := AppFull{
+		ID:                cached.ID,
+		OwnerID:           cached.OwnerID,
+		Name:              cached.Name,
+		PackageName:       cached.PackageName,
+		Type:              cached.Type,
+		AdmobAppID:        cached.AdmobAppID,
+		AppLovinSDKKey:    cached.AppLovinSDKKey,
+		Version:           cached.Version,
+		VersionCode:       cached.VersionCode,
+		IconURL:           cached.IconURL,
+		PrivacyPolicyLink: cached.PrivacyPolicyLink,
+		AppConfig: AppConfig{
+			Strings: cached.AppConfig.Strings,
+			Style:   AppStyle(cached.AppConfig.Style),
+		},
+	}
+
+	ads := make([]AppAd, len(cached.AdsConfig.Ads))
+	for index, ad := range cached.AdsConfig.Ads {
+		ads[index] = AppAd(ad)
+	}
+
+	result.AdsConfig = AdsConfig{
+		EnableOpen:                 cached.AdsConfig.EnableOpenAd,
+		EnableBanner:               cached.AdsConfig.EnableBannerAd,
+		EnableInterstitial:         cached.AdsConfig.EnableInterstitialAd,
+		EnableNative:               cached.AdsConfig.EnableNativeAd,
+		EnableReward:               cached.AdsConfig.EnableRewardAd,
+		InterstitialIntervalSecond: cached.AdsConfig.InterstitialIntervalSecond,
+		Ads:                        ads,
+	}
+
+	return result
 }

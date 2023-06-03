@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"dynapgen/constants"
 	"dynapgen/usecase"
 	"dynapgen/utils/log"
 	"errors"
@@ -27,10 +28,11 @@ func (h *Handler) HandleCreateNewApp(ctx *gin.Context) {
 		return
 	}
 
+	ownerID := ctx.GetString(constants.ContextKeyUserID)
 	param := usecase.NewAppRequest{
 		AppName:     request.AppName,
 		PackageName: request.PackageName,
-		OwnerID:     "test", // TODO: update after adding middleware
+		OwnerID:     ownerID,
 	}
 	err = h.usecase.NewApp(ctx, param)
 	if err != nil {
@@ -42,7 +44,36 @@ func (h *Handler) HandleCreateNewApp(ctx *gin.Context) {
 	WriteJson(ctx, nil, nil)
 }
 
+func (h *Handler) HandleCreateNewAds(ctx *gin.Context) {
+	var request NewAppAdsRequest
+	err := ctx.BindJSON(&request)
+	if err != nil {
+		log.Error(nil, err, "ctx.BindJSON() got error - HandleCreateNewAds")
+		WriteJson(ctx, nil, err)
+		return
+	}
+
+	param := usecase.NewAppAdsRequest{
+		AppID:            request.AppID,
+		Type:             constants.AdType(request.Type),
+		OpenAdID:         request.OpenAdID,
+		BannerAdID:       request.BannerAdID,
+		InterstitialAdID: request.InterstitialAdID,
+		RewardAdID:       request.RewardAdID,
+		NativeAdID:       request.NativeAdID,
+	}
+	err = h.usecase.NewAppAds(ctx, param)
+	if err != nil {
+		log.Error(request, err, "h.usecase.NewAppAds() got error - HandleCreateNewAds")
+		WriteJson(ctx, nil, err)
+		return
+	}
+
+	WriteJson(ctx, nil, nil)
+}
+
 func (h *Handler) HandleGetAllApps(ctx *gin.Context) {
+	userID := ctx.GetString(constants.ContextKeyUserID)
 	perPageStr := ctx.Query("per_page")
 	perPage, err := strconv.Atoi(perPageStr)
 	if err != nil {
@@ -58,7 +89,7 @@ func (h *Handler) HandleGetAllApps(ctx *gin.Context) {
 	param := usecase.GetAppListParam{
 		Page:    page,
 		PerPage: perPage,
-		OwnerID: "test", // TODO: update after adding middleware
+		OwnerID: userID,
 	}
 	result, err := h.usecase.GetAllApps(ctx, param)
 	if err != nil {
@@ -79,6 +110,22 @@ func (h *Handler) HandleGetApp(ctx *gin.Context) {
 	result, err := h.usecase.GetApp(ctx, appID)
 	if err != nil {
 		log.Error(map[string]interface{}{"app_id": appID}, err, "h.usecase.GetApp() got error - HandleGetApp")
+		WriteJson(ctx, nil, err)
+		return
+	}
+
+	WriteJson(ctx, result, nil)
+}
+
+func (h *Handler) HandleGetAppAds(ctx *gin.Context) {
+	appID := ctx.Query("id")
+	if appID == "" {
+		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
+		return
+	}
+	result, err := h.usecase.GetAppAds(ctx, appID)
+	if err != nil {
+		log.Error(map[string]interface{}{"app_id": appID}, err, "h.usecase.GetAppAds() got error - HandleGetAppAds")
 		WriteJson(ctx, nil, err)
 		return
 	}

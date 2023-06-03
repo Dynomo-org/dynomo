@@ -84,7 +84,11 @@ func main() {
 	handler := handler.NewHandler(usecase)
 
 	r := gin.Default()
-	r.Use(cors.Default())
+
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowHeaders = []string{"Authorization", "Content-Type"}
+	r.Use(cors.New(config))
 	handler.RegisterHandler(r)
 	r.Run(":5000")
 }

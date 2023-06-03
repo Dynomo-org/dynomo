@@ -5,16 +5,23 @@ import (
 	"dynapgen/repository/db"
 	"dynapgen/repository/github"
 	"dynapgen/utils/log"
+	"errors"
 	"os"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+var (
+	errorFailedToGetAppFull = errors.New("error getting app full")
+)
+
 func (uc *Usecase) GetAllApps(ctx context.Context, param GetAppListParam) (GetAppListResponse, error) {
-	apps, err := uc.db.GetAllApps(ctx)
+	apps, err := uc.db.GetAppsByUserID(ctx, param.OwnerID)
 	if err != nil {
-		log.Error(nil, err, "uc.db.GetApps() got error - GetAllApp")
+		log.Error(param, err, "uc.db.GetApps() got error - GetAllApp")
 		return GetAppListResponse{}, err
 	}
 
@@ -36,6 +43,7 @@ func (uc *Usecase) GetAllApps(ctx context.Context, param GetAppListParam) (GetAp
 func (uc *Usecase) GetApp(ctx context.Context, appID string) (App, error) {
 	app, err := uc.db.GetApp(ctx, appID)
 	if err != nil {
+		log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetApp() got error - GetApp")
 		return App{}, err
 	}
 	if app.ID == "" {
@@ -43,6 +51,78 @@ func (uc *Usecase) GetApp(ctx context.Context, appID string) (App, error) {
 	}
 
 	return App(app), nil
+}
+
+func (uc *Usecase) GetAppAds(ctx context.Context, appID string) ([]AppAds, error) {
+	ads, err := uc.db.GetAppAdsByAppID(ctx, appID)
+	if err != nil {
+		log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetAppAdsByAppID() got error - GetAppAds")
+		return nil, err
+	}
+
+	result := make([]AppAds, 0, len(ads))
+	for _, ad := range ads {
+		result = append(result, AppAds(ad))
+	}
+
+	return result, nil
+}
+
+func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error) {
+	cachedApp, err := uc.cache.GetAppFullByID(ctx, appID)
+	if err != nil {
+		log.Error(map[string]interface{}{"app_id": appID}, err, "uc.cache.GetUserRoleIDMapByUserID() got error - GetAppFull")
+	}
+	if cachedApp.ID != "" {
+		return convertAppFullFromCache(cachedApp), nil
+	}
+
+	var (
+		wg sync.WaitGroup
+
+		errMsgs     []string
+		app         db.App
+		appAds      []db.AppAds
+		appContents []db.AppContent
+	)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		app, err = uc.db.GetApp(ctx, appID)
+		if err != nil {
+			log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetApp() got error - GetAppFull")
+			errMsgs = append(errMsgs, err.Error())
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		appAds, err = uc.db.GetAppAdsByAppID(ctx, appID)
+		if err != nil {
+			log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetAppAdsByAppID() got error - GetAppFull")
+			errMsgs = append(errMsgs, err.Error())
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		appContents, err = uc.db.GetAppContentsByAppID(ctx, appID)
+		if err != nil {
+			log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetAppContentsByAppID() got error - GetAppFull")
+			errMsgs = append(errMsgs, err.Error())
+		}
+	}()
+
+	wg.Wait()
+	if len(errMsgs) > 0 {
+		log.Error(map[string]interface{}{"app_id": appID}, errors.New(strings.Join(errMsgs, ", ")), "error getting app full - GetAppFull")
+		return AppFull{}, errorFailedToGetAppFull
+	}
+
+	return buildAppFull(app, appAds, appContents), nil
 }
 
 func (uc *Usecase) NewApp(ctx context.Context, request NewAppRequest) error {
@@ -59,11 +139,34 @@ func (uc *Usecase) NewApp(ctx context.Context, request NewAppRequest) error {
 		ColorPrimaryVariant:        "#FF3700B3",
 		ColorOnPrimary:             "#FFFFFFFF",
 		InterstitialIntervalSecond: 30,
+		CreatedAt:                  time.Now(),
 	}
 
 	err := uc.db.InsertApp(ctx, app)
 	if err != nil {
 		log.Error(request, err, "uc.repo.InsertApp() got error - NewApp")
+		return err
+	}
+
+	return nil
+}
+
+func (uc *Usecase) NewAppAds(ctx context.Context, request NewAppAdsRequest) error {
+	ads := db.AppAds{
+		ID:               uuid.NewString(),
+		AppID:            request.AppID,
+		Type:             request.Type,
+		OpenAdID:         request.OpenAdID,
+		BannerAdID:       request.BannerAdID,
+		InterstitialAdID: request.InterstitialAdID,
+		RewardAdID:       request.RewardAdID,
+		NativeAdID:       request.NativeAdID,
+		CreatedAt:        time.Now(),
+	}
+
+	err := uc.db.InsertAppAds(ctx, ads)
+	if err != nil {
+		log.Error(request, err, "uc.db.InsertAppAds() got error - NewAppAds")
 		return err
 	}
 

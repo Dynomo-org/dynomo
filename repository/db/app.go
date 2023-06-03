@@ -23,12 +23,12 @@ func (r *Repository) DeleteApp(ctx context.Context, appID string) error {
 	return nil
 }
 
-func (r *Repository) GetAllApps(ctx context.Context) ([]App, error) {
+func (r *Repository) GetAppsByUserID(ctx context.Context, userID string) ([]App, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
 	defer cancel()
 
 	var result []App
-	if err := r.db.SelectContext(ctx, &result, queryGetAllApps); err != nil {
+	if err := r.db.SelectContext(ctx, &result, queryGetAppsByUserID, userID); err != nil {
 		return nil, err
 	}
 
@@ -42,6 +42,30 @@ func (r *Repository) GetApp(ctx context.Context, appID string) (App, error) {
 	var result App
 	if err := r.db.GetContext(ctx, &result, queryGetApp, appID); err != nil && err != sql.ErrNoRows {
 		return App{}, err
+	}
+
+	return result, nil
+}
+
+func (r *Repository) GetAppAdsByAppID(ctx context.Context, appID string) ([]AppAds, error) {
+	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
+	defer cancel()
+
+	var result []AppAds
+	if err := r.db.SelectContext(ctx, &result, queryGetAppAdsByAppID, appID); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (r *Repository) GetAppContentsByAppID(ctx context.Context, appID string) ([]AppContent, error) {
+	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
+	defer cancel()
+
+	var result []AppContent
+	if err := r.db.SelectContext(ctx, &result, queryGetAppContentsByAppID, appID); err != nil {
+		return nil, err
 	}
 
 	return result, nil
@@ -63,6 +87,22 @@ func (r *Repository) InsertApp(ctx context.Context, app App) error {
 	return nil
 }
 
+func (r *Repository) InsertAppAds(ctx context.Context, appAds AppAds) error {
+	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
+	defer cancel()
+
+	query, args, err := sqlx.Named(queryInsertAppAds, appAds)
+	if err != nil {
+		return err
+	}
+
+	if _, err := r.db.ExecContext(ctx, r.Rebind(query), args...); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *Repository) UpdateApp(ctx context.Context, app App) error {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
 	defer cancel()
@@ -72,7 +112,7 @@ func (r *Repository) UpdateApp(ctx context.Context, app App) error {
 		return err
 	}
 
-	if _, err := r.db.ExecContext(ctx, r.Rebind(query), args); err != nil {
+	if _, err := r.db.ExecContext(ctx, r.Rebind(query), args...); err != nil {
 		return err
 	}
 

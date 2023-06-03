@@ -6,7 +6,8 @@ import (
 
 func (h *Handler) Ping(ctx *gin.Context) {
 	WriteJson(ctx, map[string]interface{}{
-		"pong": "pong",
+		"pong":    "pong",
+		"user_id": ctx.GetString("user_id"),
 	}, nil)
 }
 
