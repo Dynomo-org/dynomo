@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type App struct {
+type AppFull struct {
 	ID                string       `json:"id,omitempty"`
 	OwnerID           string       `json:"owner_id,omitempty"`
 	Name              string       `json:"name,omitempty"`
@@ -25,18 +25,18 @@ type App struct {
 }
 
 type AdsConfig struct {
-	EnableOpenAd         bool `json:"enable_open_ad,omitempty"`
-	EnableBannerAd       bool `json:"enable_banner_ad,omitempty"`
-	EnableInterstitialAd bool `json:"enable_interstitial_ad,omitempty"`
-	EnableRewardAd       bool `json:"enable_reward_ad,omitempty"`
-	EnableNativeAd       bool `json:"enable_native_ad,omitempty"`
+	EnableOpen         bool `json:"enable_open,omitempty"`
+	EnableBanner       bool `json:"enable_banner,omitempty"`
+	EnableInterstitial bool `json:"enable_interstitial,omitempty"`
+	EnableReward       bool `json:"enable_reward,omitempty"`
+	EnableNative       bool `json:"enable_native,omitempty"`
 
-	Ads []Ad `json:"ads,omitempty"`
+	Ads []AppAd `json:"ads,omitempty"`
 
 	InterstitialIntervalSecond int `json:"interstitial_interval_second,omitempty"`
 }
 
-type Ad struct {
+type AppAd struct {
 	Type             constants.AdType `json:"ad_type,omitempty"`
 	OpenAdID         string           `json:"open_ad_id,omitempty"`
 	BannerAdID       string           `json:"banner_ad_id,omitempty"`

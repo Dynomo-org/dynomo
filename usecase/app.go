@@ -122,7 +122,13 @@ func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error
 		return AppFull{}, errorFailedToGetAppFull
 	}
 
-	return buildAppFull(app, appAds, appContents), nil
+	result := buildAppFull(app, appAds, appContents)
+	err = uc.cache.InsertAppFull(ctx, convertAppFullToCache(result))
+	if err != nil {
+		log.Error(nil, err, "uc.cache.InsertAppFull() got error - InsertAppFull")
+	}
+
+	return result, nil
 }
 
 func (uc *Usecase) NewApp(ctx context.Context, request NewAppRequest) error {
@@ -187,6 +193,11 @@ func (uc *Usecase) UpdateApp(ctx context.Context, request App) error {
 	if err != nil {
 		log.Error(param, err, "uc.db.UpdateApp() got error - UpdateApp")
 		return err
+	}
+
+	err = uc.cache.InvalidateAppFull(ctx, app.ID)
+	if err != nil {
+		log.Error(app, err, "uc.cache.InvalidateApp() got error - UpdateApp")
 	}
 
 	return nil

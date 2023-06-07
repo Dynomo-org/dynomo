@@ -47,18 +47,6 @@ func (r *Repository) GetApp(ctx context.Context, appID string) (App, error) {
 	return result, nil
 }
 
-func (r *Repository) GetAppAdsByAppID(ctx context.Context, appID string) ([]AppAds, error) {
-	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
-	defer cancel()
-
-	var result []AppAds
-	if err := r.db.SelectContext(ctx, &result, queryGetAppAdsByAppID, appID); err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
 func (r *Repository) GetAppContentsByAppID(ctx context.Context, appID string) ([]AppContent, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
 	defer cancel()
@@ -76,22 +64,6 @@ func (r *Repository) InsertApp(ctx context.Context, app App) error {
 	defer cancel()
 
 	query, args, err := sqlx.Named(queryInsertApp, app)
-	if err != nil {
-		return err
-	}
-
-	if _, err := r.db.ExecContext(ctx, r.Rebind(query), args...); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *Repository) InsertAppAds(ctx context.Context, appAds AppAds) error {
-	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
-	defer cancel()
-
-	query, args, err := sqlx.Named(queryInsertAppAds, appAds)
 	if err != nil {
 		return err
 	}

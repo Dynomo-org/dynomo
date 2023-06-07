@@ -6,8 +6,7 @@ const (
 	queryGetApp                = `select * from apps where id = $1`
 	queryGetAppString          = `select * from app_strings where app_id = $1`
 	queryGetAppStyle           = `select * from app_styles where app_id = $1`
-	queryGetAppContentsByAppID = `select * from app_contents where app_id = $1`
-	queryGetAppAdsByAppID      = `select * from app_ads where app_id = $1 order by created_at desc`
+	queryGetAppContentsByAppID = `select id, title, description, content from app_contents where app_id = $1`
 	queryInsertApp             = `
 		insert into apps(
 			id,
@@ -62,17 +61,19 @@ const (
 	queryInsertAppAds = `
 		insert into app_ads(
 			id,
+			app_id,
 			type,
 			open_ad_id,
 			banner_ad_id,
 			interstitial_ad_id,
 			reward_ad_id,
 			native_ad_id,
-			order,
+			"order",
 			created_at,
-			updated_at,
+			updated_at
 		) values (
 			:id,
+			:app_id,
 			:type,
 			:open_ad_id,
 			:banner_ad_id,
@@ -81,7 +82,7 @@ const (
 			:native_ad_id,
 			:order,
 			:created_at,
-			:updated_at,
+			:updated_at
 		)
 	`
 	queryUpdateApp = `

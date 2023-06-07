@@ -268,7 +268,7 @@ func buildAppFull(app db.App, appAds []db.AppAds, appContents []db.AppContent) A
 	return result
 }
 
-func convertAppFullFromCache(cached redis.App) AppFull {
+func convertAppFullFromCache(cached redis.AppFull) AppFull {
 	result := AppFull{
 		ID:                cached.ID,
 		OwnerID:           cached.OwnerID,
@@ -285,6 +285,7 @@ func convertAppFullFromCache(cached redis.App) AppFull {
 			Strings: cached.AppConfig.Strings,
 			Style:   AppStyle(cached.AppConfig.Style),
 		},
+		CreatedAt: cached.CreatedAt,
 	}
 
 	ads := make([]AppAd, len(cached.AdsConfig.Ads))
@@ -293,12 +294,50 @@ func convertAppFullFromCache(cached redis.App) AppFull {
 	}
 
 	result.AdsConfig = AdsConfig{
-		EnableOpen:                 cached.AdsConfig.EnableOpenAd,
-		EnableBanner:               cached.AdsConfig.EnableBannerAd,
-		EnableInterstitial:         cached.AdsConfig.EnableInterstitialAd,
-		EnableNative:               cached.AdsConfig.EnableNativeAd,
-		EnableReward:               cached.AdsConfig.EnableRewardAd,
+		EnableOpen:                 cached.AdsConfig.EnableOpen,
+		EnableBanner:               cached.AdsConfig.EnableBanner,
+		EnableInterstitial:         cached.AdsConfig.EnableInterstitial,
+		EnableNative:               cached.AdsConfig.EnableNative,
+		EnableReward:               cached.AdsConfig.EnableReward,
 		InterstitialIntervalSecond: cached.AdsConfig.InterstitialIntervalSecond,
+		Ads:                        ads,
+	}
+
+	return result
+}
+
+func convertAppFullToCache(app AppFull) redis.AppFull {
+	result := redis.AppFull{
+		ID:                app.ID,
+		OwnerID:           app.OwnerID,
+		Name:              app.Name,
+		PackageName:       app.PackageName,
+		Type:              app.Type,
+		AdmobAppID:        app.AdmobAppID,
+		AppLovinSDKKey:    app.AppLovinSDKKey,
+		Version:           app.Version,
+		VersionCode:       app.VersionCode,
+		IconURL:           app.IconURL,
+		PrivacyPolicyLink: app.PrivacyPolicyLink,
+		AppConfig: redis.AppConfig{
+			Strings: app.AppConfig.Strings,
+			Style:   redis.AppStyle(app.AppConfig.Style),
+		},
+		CreatedAt: app.CreatedAt,
+	}
+
+	ads := make([]redis.AppAd, len(app.AdsConfig.Ads))
+	for index, ad := range app.AdsConfig.Ads {
+		ads[index] = redis.AppAd(ad)
+	}
+
+	result.AdsConfig = redis.AdsConfig{
+		EnableOpen:                 app.AdsConfig.EnableOpen,
+		EnableBanner:               app.AdsConfig.EnableBanner,
+		EnableInterstitial:         app.AdsConfig.EnableInterstitial,
+		EnableNative:               app.AdsConfig.EnableNative,
+		EnableReward:               app.AdsConfig.EnableReward,
+		InterstitialIntervalSecond: app.AdsConfig.InterstitialIntervalSecond,
 		Ads:                        ads,
 	}
 

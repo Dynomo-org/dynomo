@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	errorAppIDEmpty = errors.New("app_id is empty")
+	errorAppIDEmpty = errors.New("id is empty")
 
 	supportedFileTypes = map[string]struct{}{"png": {}, "jpg": {}, "jpeg": {}}
 )
@@ -126,6 +126,22 @@ func (h *Handler) HandleGetAppAds(ctx *gin.Context) {
 	result, err := h.usecase.GetAppAds(ctx, appID)
 	if err != nil {
 		log.Error(map[string]interface{}{"app_id": appID}, err, "h.usecase.GetAppAds() got error - HandleGetAppAds")
+		WriteJson(ctx, nil, err)
+		return
+	}
+
+	WriteJson(ctx, result, nil)
+}
+
+func (h *Handler) HandleGetFullApp(ctx *gin.Context) {
+	appID := ctx.Query("id")
+	if appID == "" {
+		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
+		return
+	}
+	result, err := h.usecase.GetAppFull(ctx, appID)
+	if err != nil {
+		log.Error(map[string]interface{}{"app_id": appID}, err, "h.usecase.GetAppFull() got error - HandleGetFullApp")
 		WriteJson(ctx, nil, err)
 		return
 	}
