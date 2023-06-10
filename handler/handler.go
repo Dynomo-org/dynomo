@@ -24,7 +24,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	router.GET("/apps", checkUserAuthorization, h.HandleGetAllApps)
 	router.GET("/app", checkUserAuthorization, h.HandleGetApp)
-	router.GET("/app/full", checkUserAuthorization, h.HandleGetFullApp)
+	router.GET("/app/full", h.HandleGetFullApp)
 	router.POST("/app", checkUserAuthorization, h.HandleCreateNewApp)
 	router.PUT("/app", checkUserAuthorization, h.HandleUpdateApp)
 	router.DELETE("/app", checkUserAuthorization, h.HandleDeleteApp)
