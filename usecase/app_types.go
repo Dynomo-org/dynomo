@@ -41,7 +41,7 @@ type App struct {
 	OwnerID                    string      `json:"owner_id"`
 	Name                       string      `json:"name"`
 	PackageName                string      `json:"package_name"`
-	Type                       uint8       `json:"type"`
+	TemplateID                 string      `json:"template_id"`
 	AdmobAppID                 string      `json:"admob_app_id"`
 	AppLovinSDKKey             string      `json:"app_lovin_sdk_key"`
 	Version                    int         `json:"version"`
@@ -81,7 +81,7 @@ type AppFull struct {
 	OwnerID           string       `json:"owner_id"`
 	Name              string       `json:"name"`
 	PackageName       string       `json:"package_name"`
-	Type              uint8        `json:"type"`
+	TemplateID        string       `json:"template_id"`
 	AdmobAppID        string       `json:"admob_app_id"`
 	AppLovinSDKKey    string       `json:"app_lovin_sdk_key"`
 	Version           int          `json:"version"`
@@ -219,7 +219,7 @@ func buildAppFull(app db.App, appAds []db.AppAds, appContents []db.AppContent) A
 		OwnerID:           app.OwnerID,
 		Name:              app.Name,
 		PackageName:       app.PackageName,
-		Type:              app.Type,
+		TemplateID:        app.TemplateID,
 		AdmobAppID:        app.AdmobAppID,
 		AppLovinSDKKey:    app.AppLovinSDKKey,
 		Version:           app.Version,
@@ -274,7 +274,7 @@ func convertAppFullFromCache(cached redis.AppFull) AppFull {
 		OwnerID:           cached.OwnerID,
 		Name:              cached.Name,
 		PackageName:       cached.PackageName,
-		Type:              cached.Type,
+		TemplateID:        cached.TemplateID,
 		AdmobAppID:        cached.AdmobAppID,
 		AppLovinSDKKey:    cached.AppLovinSDKKey,
 		Version:           cached.Version,
@@ -312,7 +312,7 @@ func convertAppFullToCache(app AppFull) redis.AppFull {
 		OwnerID:           app.OwnerID,
 		Name:              app.Name,
 		PackageName:       app.PackageName,
-		Type:              app.Type,
+		TemplateID:        app.TemplateID,
 		AdmobAppID:        app.AdmobAppID,
 		AppLovinSDKKey:    app.AppLovinSDKKey,
 		Version:           app.Version,

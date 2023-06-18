@@ -4,3 +4,5 @@ dynapgen
 /assets
 /db
 ssh*
+/garage
+/templates

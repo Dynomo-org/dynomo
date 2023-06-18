@@ -4,10 +4,10 @@ import (
 	"context"
 	"dynapgen/repository/github"
 	"dynapgen/repository/redis"
+	"dynapgen/utils/cmd"
 	"dynapgen/utils/log"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 )
@@ -98,11 +98,11 @@ func (uc *Usecase) generateKeystoreAsync(ctx context.Context, param GenerateStor
 
 	filePath := "./assets/" + param.AppID + "/key.keystore"
 	dName := fmt.Sprintf("CN=%s,O=%s,C=%s", param.FullName, param.Organization, param.Country)
-	cmd := exec.CommandContext(ctx, "keytool", "-genkey", "-v", "-keystore", filePath, "-storepass", param.StorePassword, "-alias", param.Alias, "-keypass", param.KeyPassword, "-keyalg", "RSA", "-keysize", "2048", "-validity", "10000", "-noprompt", "-dname", dName)
 
-	_, err = cmd.Output()
+	fullCommand := fmt.Sprintf("keytool -genkey -v -keystore %s -storepass %s -alias %s -keypass %s -keyalg RSA -keysize 2048 -validity 10000 -noprompt -dname %s", filePath, param.StorePassword, param.Alias, param.KeyPassword, dName)
+	err = cmd.ExecCommandWithContext(ctx, fullCommand)
 	if err != nil {
-		log.Error(param, err, "exec.Command() got error - generateKeystoreAsync")
+		log.Error(param, err, "cmd.ExecCommandWithContext() got error - generateKeystoreAsync")
 		return
 	}
 

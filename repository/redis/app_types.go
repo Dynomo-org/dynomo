@@ -10,7 +10,7 @@ type AppFull struct {
 	OwnerID           string       `json:"owner_id,omitempty"`
 	Name              string       `json:"name,omitempty"`
 	PackageName       string       `json:"package_name,omitempty"`
-	Type              uint8        `json:"type,omitempty"`
+	TemplateID        string       `json:"template_id,omitempty"`
 	AdmobAppID        string       `json:"admob_app_id,omitempty"`
 	AppLovinSDKKey    string       `json:"app_lovin_sdk_key,omitempty"`
 	Version           int          `json:"version,omitempty"`

@@ -3,10 +3,10 @@ package handler
 import (
 	"dynapgen/constants"
 	"dynapgen/usecase"
+	"dynapgen/utils/assets"
 	"dynapgen/utils/log"
 	"errors"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -16,7 +16,7 @@ import (
 var (
 	errorAppIDEmpty = errors.New("id is empty")
 
-	supportedFileTypes = map[string]struct{}{"png": {}, "jpg": {}, "jpeg": {}}
+	imageFileTypes = map[string]struct{}{"png": {}, "jpg": {}, "jpeg": {}}
 )
 
 func (h *Handler) HandleCreateNewApp(ctx *gin.Context) {
@@ -209,13 +209,13 @@ func (h *Handler) HandleUpdateAppIcon(ctx *gin.Context) {
 	}
 
 	fileExt := filenameSegments[len(filenameSegments)-1]
-	if _, ok := supportedFileTypes[strings.ToLower(fileExt)]; !ok {
+	if _, ok := imageFileTypes[strings.ToLower(fileExt)]; !ok {
 		WriteJson(ctx, nil, errors.New("file extension not supported"), http.StatusBadRequest)
 		return
 	}
 
 	file.Filename = "app_icon." + filenameSegments[len(filenameSegments)-1]
-	dst := filepath.Join("./assets/" + file.Filename)
+	dst := assets.GenerateAssetPath(file.Filename)
 	ctx.SaveUploadedFile(file, dst)
 
 	err = h.usecase.UpdateAppIcon(ctx, appID, file.Filename, dst)

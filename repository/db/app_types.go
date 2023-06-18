@@ -10,7 +10,7 @@ type App struct {
 	OwnerID                    string      `db:"owner_id"`
 	Name                       string      `db:"name"`
 	PackageName                string      `db:"package_name"`
-	Type                       uint8       `db:"type"`
+	TemplateID                 string      `db:"template_id"`
 	AdmobAppID                 string      `db:"admob_app_id"`
 	AppLovinSDKKey             string      `db:"app_lovin_sdk_key"`
 	Version                    int         `db:"version"`

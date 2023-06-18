@@ -137,7 +137,6 @@ func (uc *Usecase) NewApp(ctx context.Context, request NewAppRequest) error {
 		OwnerID:                    request.OwnerID,
 		Name:                       request.AppName,
 		PackageName:                request.PackageName,
-		Type:                       AppTypeUnset,
 		Version:                    1,
 		VersionCode:                "1.0.0",
 		IconURL:                    "https://raw.githubusercontent.com/Dynapgen/master-storage-1/main/assets/default-icon.png",
@@ -176,6 +175,11 @@ func (uc *Usecase) NewAppAds(ctx context.Context, request NewAppAdsRequest) erro
 		return err
 	}
 
+	err = uc.cache.InvalidateAppFull(ctx, request.AppID)
+	if err != nil {
+		log.Error(map[string]interface{}{}, err, "uc.cache.InvalidateApp() got error - NewAppAds")
+	}
+
 	return nil
 }
 
@@ -204,6 +208,10 @@ func (uc *Usecase) UpdateApp(ctx context.Context, request App) error {
 }
 
 func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, localPath string) error {
+	defer func() {
+		os.Remove(localPath)
+	}()
+
 	meta := map[string]interface{}{
 		"app_id":     appID,
 		"local_path": localPath,
@@ -226,7 +234,6 @@ func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, lo
 		log.Error(meta, err, "uc.repo.UploadToGithub() got error - UpdateAppIcon")
 		return err
 	}
-	os.Remove(localPath)
 
 	timeNow := time.Now()
 	app.IconURL = iconURL

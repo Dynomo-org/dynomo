@@ -28,7 +28,7 @@ type App struct {
 	OwnerID                    string      `json:"owner_id"`
 	Name                       string      `json:"name"`
 	PackageName                string      `json:"package_name"`
-	Type                       uint8       `json:"type"`
+	TemplateID                 string      `json:"template_id"`
 	AdmobAppID                 string      `json:"admob_app_id"`
 	AppLovinSDKKey             string      `json:"app_lovin_sdk_key"`
 	Version                    int         `json:"version"`
