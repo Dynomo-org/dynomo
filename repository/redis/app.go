@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,6 +16,10 @@ const (
 
 	keyApp            = "app_%s"
 	keyBuildAppStatus = "app_%s_build_app"
+)
+
+var (
+	errNoBuildAppStatus = errors.New("no build app job running")
 )
 
 func (r *Repository) GetAppFullByID(ctx context.Context, appID string) (AppFull, error) {
@@ -35,6 +40,29 @@ func (r *Repository) GetAppFullByID(ctx context.Context, appID string) (AppFull,
 	}
 
 	return app, nil
+}
+
+func (r *Repository) GetBuildAppStatus(ctx context.Context, appID string) (BuildStatus, error) {
+	key := fmt.Sprintf(keyBuildAppStatus, appID)
+	result, err := r.redis.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return BuildStatus{
+				Status:       BuildStatusEnumFailed,
+				ErrorMessage: errNoBuildAppStatus.Error(),
+			}, nil
+		}
+
+		return BuildStatus{}, err
+	}
+
+	var buildStatus BuildStatus
+	err = json.Unmarshal([]byte(result), &buildStatus)
+	if err != nil {
+		return BuildStatus{}, nil
+	}
+
+	return buildStatus, nil
 }
 
 func (r *Repository) InvalidateAppFull(ctx context.Context, appID string) error {

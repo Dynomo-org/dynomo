@@ -29,6 +29,16 @@ func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 		return nil
 	}
 
+	if err = uc.cache.SetBuildAppStatus(ctx, redis.UpdateBuildStatusParam{
+		AppID: param.AppID,
+		BuildStatus: redis.BuildStatus{
+			Status: redis.BuildStatusEnumPending,
+		},
+	}); err != nil {
+		log.Error(err, "error initiating build app", nil)
+		return err
+	}
+
 	buildParam := nsq.BuildAppParam{
 		AppID:          param.AppID,
 		AppName:        app.Name,
@@ -38,13 +48,26 @@ func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 		TemplateName:   getRepositoryName(template.RepositoryURL),
 	}
 
-	err = uc.mq.PublishBuildApp(ctx, buildParam)
-	if err != nil {
+	if err = uc.mq.PublishBuildApp(ctx, buildParam); err != nil {
 		log.Error(err, "error publishing build app message", buildParam)
 		return err
 	}
 
 	return nil
+}
+
+func (uc *Usecase) GetBuildAppStatus(ctx context.Context, appID string) (BuildStatus, error) {
+	result, err := uc.cache.GetBuildAppStatus(ctx, appID)
+	if err != nil {
+		log.Error(err, "error getting build app status")
+		return BuildStatus{}, err
+	}
+
+	return BuildStatus{
+		Status:       BuildStatusEnum(result.Status),
+		URL:          result.URL,
+		ErrorMessage: result.ErrorMessage,
+	}, nil
 }
 
 func (uc *Usecase) SetBuildAppStatus(ctx context.Context, param UpdateBuildStatusParam) error {

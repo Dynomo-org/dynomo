@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -16,11 +17,19 @@ const (
 	keyBuildKeystoreStatus = "app_%s_build_keystore"
 )
 
-func (r *Repository) GetKeystoreBuildStatus(ctx context.Context, appID string) (BuildStatus, error) {
-	result, err := r.redis.HGet(ctx, appID, fieldKeystore).Result()
+var (
+	errNoBuildKeystoreStatus = errors.New("no build keystore job running")
+)
+
+func (r *Repository) GetBuildKeystoreStatus(ctx context.Context, appID string) (BuildStatus, error) {
+	key := fmt.Sprintf(keyBuildKeystoreStatus, appID)
+	result, err := r.redis.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return BuildStatus{}, nil
+			return BuildStatus{
+				Status:       BuildStatusEnumFailed,
+				ErrorMessage: errNoBuildKeystoreStatus.Error(),
+			}, nil
 		}
 
 		return BuildStatus{}, err

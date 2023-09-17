@@ -35,8 +35,10 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/ads", checkUserAuthorization, h.HandleGetAppAds)
 	router.POST("/ads", checkUserAuthorization, h.HandleCreateNewAds)
 
-	router.POST("/build-status/keystore", h.HandleUpdateBuildKeystoreStatus)
+	router.GET("/build-status/app", h.HandleGetBuildAppStatus)
+	router.GET("/build-status/keystore", h.HandleGetBuildKeystoreStatus)
 	router.POST("/build-status/app", h.HandleUpdateBuildAppStatus)
+	router.POST("/build-status/keystore", h.HandleUpdateBuildKeystoreStatus)
 
 	router.POST("/keystore", h.HandleGenerateKeystore)
 

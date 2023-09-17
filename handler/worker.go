@@ -7,6 +7,38 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func (h *Handler) HandleGetBuildAppStatus(ctx *gin.Context) {
+	appID := ctx.Query("app_id")
+	if appID == "" {
+		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
+		return
+	}
+
+	result, err := h.usecase.GetBuildAppStatus(ctx, appID)
+	if err != nil {
+		WriteJson(ctx, nil, err)
+		return
+	}
+
+	WriteJson(ctx, result, nil)
+}
+
+func (h *Handler) HandleGetBuildKeystoreStatus(ctx *gin.Context) {
+	appID := ctx.Query("app_id")
+	if appID == "" {
+		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
+		return
+	}
+
+	result, err := h.usecase.GetBuildKeystoreStatus(ctx, appID)
+	if err != nil {
+		WriteJson(ctx, nil, err)
+		return
+	}
+
+	WriteJson(ctx, result, nil)
+}
+
 func (h *Handler) HandleUpdateBuildAppStatus(ctx *gin.Context) {
 	appID := ctx.Query("app_id")
 	if appID == "" {
