@@ -9,9 +9,3 @@ type GenerateStoreParam struct {
 	KeyPassword   string `json:"key_password"`
 	StorePassword string `json:"store_password"`
 }
-
-type Keystore struct {
-	Status       uint8  `json:"status"`
-	URL          string `json:"url"`
-	ErrorMessage string `json:"error_message"`
-}

@@ -39,5 +39,5 @@ func (r *Repository) InsertTemplate(ctx context.Context, template Template) erro
 		return err
 	}
 
-	return r.redis.SetEx(ctx, key, string(marshalled), defaultTTL).Err()
+	return r.redis.SetEx(ctx, key, string(marshalled), TTL1Day).Err()
 }

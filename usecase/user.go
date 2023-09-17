@@ -4,8 +4,8 @@ import (
 	"context"
 	"dynapgen/constants"
 	"dynapgen/repository/db"
-	"dynapgen/utils/log"
-	"dynapgen/utils/tokenizer"
+	"dynapgen/util/log"
+	"dynapgen/util/tokenizer"
 	"errors"
 
 	"github.com/google/uuid"
@@ -24,7 +24,7 @@ var (
 func (uc *Usecase) GetUserInfo(ctx context.Context, userID string) (UserInfo, error) {
 	user, err := uc.db.GetUserInfoByID(ctx, userID)
 	if err != nil {
-		log.Error(map[string]interface{}{"user_id": userID}, err, "uc.db.GetUserInfoByID() got error - GetUserInfo")
+		log.Error(err, "uc.db.GetUserInfoByID() got error - GetUserInfo", map[string]interface{}{"user_id": userID})
 		return UserInfo{}, err
 	}
 	if user.ID == "" {
@@ -41,7 +41,7 @@ func (uc *Usecase) GetUserInfo(ctx context.Context, userID string) (UserInfo, er
 func (uc *Usecase) GetUserRoleIDMapByUserID(ctx context.Context, userID string) (map[string]struct{}, error) {
 	cachedUserRoles, err := uc.cache.GetUserRoleIDMapByUserID(ctx, userID)
 	if err != nil {
-		log.Error(map[string]interface{}{"user_id": userID}, err, "uc.cache.GetUserRoleIDMapByUserID() got error - GetUserRoleIDMapByUserID")
+		log.Error(err, "uc.cache.GetUserRoleIDMapByUserID() got error - GetUserRoleIDMapByUserID", map[string]interface{}{"user_id": userID})
 	}
 	if cachedUserRoles != nil {
 		result := make(map[string]struct{})
@@ -54,7 +54,7 @@ func (uc *Usecase) GetUserRoleIDMapByUserID(ctx context.Context, userID string) 
 
 	userRoles, err := uc.db.GetUserRoleIDsByUserID(ctx, userID)
 	if err != nil {
-		log.Error(map[string]interface{}{"user_id": userID}, err, "uc.db.GetUserRoleIDsByUserID() got error - GetUserRoleIDMapByUserID")
+		log.Error(err, "uc.db.GetUserRoleIDsByUserID() got error - GetUserRoleIDMapByUserID", map[string]interface{}{"user_id": userID})
 		return nil, err
 	}
 
@@ -67,10 +67,10 @@ func (uc *Usecase) GetUserRoleIDMapByUserID(ctx context.Context, userID string) 
 
 	err = uc.cache.SetUserRoleIDMapForUserID(ctx, userID, cacheParam)
 	if err != nil {
-		log.Error(map[string]interface{}{
+		log.Error(err, "uc.cache.SetUserRoleIDMapForUserID() got error - GetUserRoleIDMapByUserID", map[string]interface{}{
 			"user_id":     userID,
 			"cache_param": cacheParam,
-		}, err, "uc.cache.SetUserRoleIDMapForUserID() got error - GetUserRoleIDMapByUserID")
+		})
 	}
 
 	return result, nil
@@ -79,7 +79,7 @@ func (uc *Usecase) GetUserRoleIDMapByUserID(ctx context.Context, userID string) 
 func (uc *Usecase) LoginUser(ctx context.Context, user User) (AuthUserResponse, error) {
 	savedUser, err := uc.db.GetUserByEmail(ctx, user.Email)
 	if err != nil {
-		log.Error(user, err, "uc.db.GetUserByEmail() got error - LoginUser")
+		log.Error(err, "uc.db.GetUserByEmail() got error - LoginUser", user)
 		return AuthUserResponse{}, err
 	}
 	if savedUser.ID == "" {
@@ -90,7 +90,7 @@ func (uc *Usecase) LoginUser(ctx context.Context, user User) (AuthUserResponse, 
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return AuthUserResponse{}, ErrorUserNotFound
 		}
-		log.Error(user, err, "bcrypt.CompareHashAndPassword() got error - CompareHashAndPassword")
+		log.Error(err, "bcrypt.CompareHashAndPassword() got error - CompareHashAndPassword", user)
 		return AuthUserResponse{}, err
 	}
 
@@ -98,7 +98,7 @@ func (uc *Usecase) LoginUser(ctx context.Context, user User) (AuthUserResponse, 
 		"id": savedUser.ID,
 	})
 	if err != nil {
-		log.Error(savedUser, err, "tokenizer.GenerateJWTToken() got error - RegisterUser")
+		log.Error(err, "tokenizer.GenerateJWTToken() got error - RegisterUser", savedUser)
 		return AuthUserResponse{}, err
 	}
 
@@ -111,7 +111,7 @@ func (uc *Usecase) LoginUser(ctx context.Context, user User) (AuthUserResponse, 
 func (uc *Usecase) RegisterUser(ctx context.Context, user User) (AuthUserResponse, error) {
 	savedUser, err := uc.db.GetUserByEmail(ctx, user.Email)
 	if err != nil {
-		log.Error(user, err, "uc.db.GetUserByEmail() got error - RegisterUser")
+		log.Error(err, "uc.db.GetUserByEmail() got error - RegisterUser", user)
 		return AuthUserResponse{}, err
 	}
 	if savedUser.ID != "" {
@@ -119,7 +119,7 @@ func (uc *Usecase) RegisterUser(ctx context.Context, user User) (AuthUserRespons
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), passwordSalt)
 	if err != nil {
-		log.Error(user, err, "bcrypt.GenerateFromPassword() got error - RegisterUser")
+		log.Error(err, "bcrypt.GenerateFromPassword() got error - RegisterUser", user)
 		return AuthUserResponse{}, err
 	}
 
@@ -133,13 +133,13 @@ func (uc *Usecase) RegisterUser(ctx context.Context, user User) (AuthUserRespons
 
 	err = uc.db.InsertUser(ctx, param)
 	if err != nil {
-		log.Error(param, err, "uc.db.InsertUser() got error - RegisterUser")
+		log.Error(err, "uc.db.InsertUser() got error - RegisterUser", param)
 		return AuthUserResponse{}, err
 	}
 
 	err = uc.db.InsertUserRole(ctx, userID, string(constants.RoleUser))
 	if err != nil {
-		log.Error(param, err, "uc.db.InsertUserRole() got error - RegisterUser")
+		log.Error(err, "uc.db.InsertUserRole() got error - RegisterUser", param)
 		return AuthUserResponse{}, err
 	}
 
@@ -147,7 +147,7 @@ func (uc *Usecase) RegisterUser(ctx context.Context, user User) (AuthUserRespons
 		"id": userID,
 	})
 	if err != nil {
-		log.Error(param, err, "tokenizer.GenerateJWTToken() got error - RegisterUser")
+		log.Error(err, "tokenizer.GenerateJWTToken() got error - RegisterUser", param)
 		return AuthUserResponse{}, err
 	}
 

@@ -3,43 +3,67 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 const (
 	fieldKeystore = "keystore"
-	keystoreTTL   = 5 * 60
+	keystoreTTL   = 5 * 60 * time.Second
+
+	keyBuildKeystoreStatus = "app_%s_build_keystore"
 )
 
-func (r *Repository) GetKeystore(ctx context.Context, appID string) (Keystore, error) {
-	result, err := r.redis.HGet(ctx, appID, fieldKeystore).Result()
+var (
+	errNoBuildKeystoreStatus = errors.New("no build keystore job running")
+)
+
+func (r *Repository) GetBuildKeystoreStatus(ctx context.Context, appID string) (BuildStatus, error) {
+	key := fmt.Sprintf(keyBuildKeystoreStatus, appID)
+	result, err := r.redis.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return Keystore{}, nil
+			return BuildStatus{
+				Status:       BuildStatusEnumFailed,
+				ErrorMessage: errNoBuildKeystoreStatus.Error(),
+			}, nil
 		}
 
-		return Keystore{}, err
+		return BuildStatus{}, err
 	}
 
-	var keystore Keystore
-	err = json.Unmarshal([]byte(result), &keystore)
+	var buildStatus BuildStatus
+	err = json.Unmarshal([]byte(result), &buildStatus)
 	if err != nil {
-		return Keystore{}, nil
+		return BuildStatus{}, nil
 	}
 
-	return keystore, nil
+	return buildStatus, nil
 }
 
-func (r *Repository) InvalidateKeystore(ctx context.Context, appID string) error {
+func (r *Repository) InvalidateKeystoreBuildStatus(ctx context.Context, appID string) error {
 	result := r.redis.HDel(ctx, appID, fieldKeystore)
 	return result.Err()
 }
-func (r *Repository) InsertKeystore(ctx context.Context, appID string, keystore Keystore) error {
-	marshalled, err := json.Marshal(keystore)
+
+func (r *Repository) InsertKeystoreBuildStatus(ctx context.Context, appID string, buildStatus BuildStatus) error {
+	marshalled, err := json.Marshal(buildStatus)
 	if err != nil {
 		return err
 	}
 
 	return r.HSetEX(ctx, appID, fieldKeystore, string(marshalled), keystoreTTL)
+}
+
+func (r *Repository) SetBuildKeystoreStatus(ctx context.Context, param UpdateBuildStatusParam) error {
+	key := fmt.Sprintf(keyBuildKeystoreStatus, param.AppID)
+	marshalled, err := json.Marshal(param.BuildStatus)
+	if err != nil {
+		return err
+	}
+
+	return r.redis.SetEx(ctx, key, string(marshalled), TTL15Minutes).Err()
 }

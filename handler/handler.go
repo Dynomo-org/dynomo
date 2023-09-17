@@ -35,7 +35,11 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/ads", checkUserAuthorization, h.HandleGetAppAds)
 	router.POST("/ads", checkUserAuthorization, h.HandleCreateNewAds)
 
-	router.GET("/keystore", h.HandleGetGenerateKeystoreStatus)
+	router.GET("/build-status/app", h.HandleGetBuildAppStatus)
+	router.GET("/build-status/keystore", h.HandleGetBuildKeystoreStatus)
+	router.POST("/build-status/app", h.HandleUpdateBuildAppStatus)
+	router.POST("/build-status/keystore", h.HandleUpdateBuildKeystoreStatus)
+
 	router.POST("/keystore", h.HandleGenerateKeystore)
 
 	router.GET("/user/info", checkUserAuthorization, h.HandleGetUserInfo)
@@ -45,7 +49,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 func WriteJson(ctx *gin.Context, data interface{}, err error, statusCode ...int) {
 	payload := map[string]interface{}{
-		"success": true,
+		"is_success": true,
 	}
 	code := http.StatusOK
 	if data != nil {
@@ -54,7 +58,7 @@ func WriteJson(ctx *gin.Context, data interface{}, err error, statusCode ...int)
 
 	if err != nil {
 		code = http.StatusInternalServerError
-		payload["success"] = false
+		payload["is_success"] = false
 		payload["error"] = err.Error()
 	}
 

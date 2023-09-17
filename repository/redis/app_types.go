@@ -58,7 +58,8 @@ type AppConfig struct {
 }
 
 type AppStyle struct {
-	ColorPrimary        string `json:"color_primary,omitempty"`
-	ColorPrimaryVariant string `json:"color_primary_variant,omitempty"`
-	ColorOnPrimary      string `json:"color_on_primary,omitempty"`
+	ColorPrimary     string `json:"color_primary,omitempty"`
+	ColorSecondary   string `json:"color_secondary,omitempty"`
+	ColorOnPrimary   string `json:"color_on_primary,omitempty"`
+	ColorOnSecondary string `json:"color_on_secondary,omitempty"`
 }

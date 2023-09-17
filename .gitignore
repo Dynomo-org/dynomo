@@ -6,3 +6,4 @@ dynapgen
 ssh*
 /garage
 /templates
+.DS_STORE

@@ -23,8 +23,8 @@ const (
 )
 
 var (
-	authorName  = "Dynapgen"
-	authorEmail = "dynapgen@gmail.com"
+	authorName  = "Dynomo"
+	authorEmail = "dynomo@gmail.com"
 )
 
 func (r *Repository) getRef(ctx context.Context) (*github.Reference, error) {

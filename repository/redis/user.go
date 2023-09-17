@@ -23,7 +23,7 @@ func (r *Repository) SetUserRoleIDMapForUserID(ctx context.Context, userID strin
 		return err
 	}
 
-	return r.redis.SetEx(ctx, key, marshaledRoles, defaultTTL).Err()
+	return r.redis.SetEx(ctx, key, marshaledRoles, TTL1Day).Err()
 }
 
 func (r *Repository) GetUserRoleIDMapByUserID(ctx context.Context, userID string) (map[constants.UserRole]struct{}, error) {

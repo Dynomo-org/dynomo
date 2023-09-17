@@ -19,8 +19,9 @@ type App struct {
 	PrivacyPolicyLink          string      `db:"privacy_policy_link"`
 	Strings                    interface{} `db:"strings"`
 	ColorPrimary               string      `db:"color_primary"`
-	ColorPrimaryVariant        string      `db:"color_primary_variant"`
+	ColorSecondary             string      `db:"color_secondary"`
 	ColorOnPrimary             string      `db:"color_on_primary"`
+	ColorOnSecondary           string      `db:"color_on_secondary"`
 	EnableOpen                 bool        `db:"enable_open"`
 	EnableBanner               bool        `db:"enable_banner"`
 	EnableInterstitial         bool        `db:"enable_interstitial"`

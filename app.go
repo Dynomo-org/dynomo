@@ -3,19 +3,23 @@ package main
 import (
 	"context"
 	"dynapgen/handler"
+	"fmt"
+	"time"
+
 	repoDB "dynapgen/repository/db"
 	repoGithub "dynapgen/repository/github"
+	repoNSQ "dynapgen/repository/nsq"
 	repoRedis "dynapgen/repository/redis"
 	"dynapgen/usecase"
-	"fmt"
-	"log"
-	"time"
+	"dynapgen/util/env"
+	"dynapgen/util/log"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v52/github"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	nsq "github.com/nsqio/go-nsq"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 )
@@ -35,17 +39,15 @@ func NewServer(handler *handler.Handler) *Server {
 func main() {
 	ctx := context.Background()
 
-	viper.SetConfigFile(".env")
-	viper.AddConfigPath(".")
-	viper.AutomaticEnv()
-	err := viper.ReadInConfig()
+	// init config and env
+	err := env.InitConfig()
 	if err != nil {
-		log.Fatal("failed to read config, err:", err.Error())
+		log.Fatal(err)
 	}
 
 	// init redis connection
 	redisAddr := viper.GetString("REDIS_ADDR")
-	if viper.GetString("ENV") == "production" {
+	if !env.IsDevelopment() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	redisOpt := &redis.Options{
@@ -53,9 +55,9 @@ func main() {
 	}
 	redisConn := initRedis(redisOpt)
 	if redisConn == nil {
-		log.Fatal("error connecting to redis - ", err)
+		log.Fatal(err)
 	}
-	fmt.Println("connected to redis")
+	log.Info("connected to redis")
 
 	// init db
 	dbConnectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -67,20 +69,30 @@ func main() {
 	)
 	dbClient, err := initDB("postgres", dbConnectionString)
 	if err != nil {
-		log.Fatal("error connecting to DB - ", err)
+		log.Fatal(err)
 	}
-	fmt.Println("connected to DB")
+	log.Info("connected to DB")
 
 	// init github connection
 	githubClientKey := viper.GetString("GITHUB_CLIENT_KEY")
 	githubConn := github.NewTokenClient(ctx, githubClientKey)
-	fmt.Println("connected to github")
+	log.Info("connected to github")
+
+	// init NSQ connection
+	nsqConfig := nsq.NewConfig()
+	nsqConn, err := nsq.NewProducer("127.0.0.1:4150", nsqConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+	nsqConn.SetLogger(nil, nsq.LogLevelError)
 
 	// init app layers
 	repoDB := repoDB.New(dbClient)
 	repoRedis := repoRedis.New(redisConn)
 	repoGithub := repoGithub.New(githubConn)
-	usecase := usecase.NewUsecase(repoDB, repoRedis, repoGithub)
+	repoNsq := repoNSQ.New(nsqConn)
+
+	usecase := usecase.NewUsecase(repoDB, repoRedis, repoGithub, repoNsq)
 	handler := handler.NewHandler(usecase)
 
 	r := gin.Default()

@@ -37,8 +37,9 @@ type App struct {
 	PrivacyPolicyLink          string      `json:"privacy_policy_link"`
 	Strings                    interface{} `json:"strings"`
 	ColorPrimary               string      `json:"color_primary"`
-	ColorPrimaryVariant        string      `json:"color_primary_variant"`
+	ColorSecondary             string      `json:"color_secondary"`
 	ColorOnPrimary             string      `json:"color_on_primary"`
+	ColorOnSecondary           string      `json:"color_on_secondary"`
 	EnableOpen                 bool        `json:"enable_open"`
 	EnableBanner               bool        `json:"enable_banner"`
 	EnableInterstitial         bool        `json:"enable_interstitial"`

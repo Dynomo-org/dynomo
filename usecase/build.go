@@ -2,90 +2,83 @@ package usecase
 
 import (
 	"context"
-	"dynapgen/utils/cmd"
-	"dynapgen/utils/log"
-	"fmt"
-	"os"
-	"path/filepath"
+	"dynapgen/repository/nsq"
+	"dynapgen/repository/redis"
+	"dynapgen/util/log"
 	"strings"
 )
 
-func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) (interface{}, error) {
-	go uc.buildAppAsync(ctx, param)
-
-	return nil, nil
-}
-
-func (uc *Usecase) buildAppAsync(ctx context.Context, param BuildAppParam) {
-	var (
-		appFolderPath string
-		err           error
-	)
-	defer func() {
-		// os.RemoveAll(param.KeystorePath)
-		// os.RemoveAll(appFolderPath)
-	}()
-
+func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 	app, err := uc.db.GetApp(ctx, param.AppID)
 	if err != nil {
-		log.Error(nil, err, "uc.db.GetApp() got error - buildAppAsync")
-		return
+		log.Error(err, "uc.db.GetApp() got error - buildAppAsync")
+		return err
 	}
 
 	if app.ID == "" {
-		return
+		return nil
 	}
 
 	template, err := uc.GetTemplateByID(ctx, app.TemplateID)
 	if err != nil {
-		log.Error(nil, err, "uc.GetTemplateByID() got error - buildAppAsync")
-		return
+		log.Error(err, "uc.GetTemplateByID() got error - buildAppAsync")
+		return err
 	}
 
 	if template.ID == "" || template.RepositoryURL == "" {
-		return
+		return nil
 	}
 
-	keystoreNameSegments := strings.Split(param.KeystorePath, "/")
-	keystoreFileName := keystoreNameSegments[len(keystoreNameSegments)-1]
-	keystoreFolderPath := filepath.Join("./garage", param.AppID)
-	err = os.MkdirAll(keystoreFolderPath, 0755)
+	if err = uc.cache.SetBuildAppStatus(ctx, redis.UpdateBuildStatusParam{
+		AppID: param.AppID,
+		BuildStatus: redis.BuildStatus{
+			Status: redis.BuildStatusEnumPending,
+		},
+	}); err != nil {
+		log.Error(err, "error initiating build app", nil)
+		return err
+	}
+
+	buildParam := nsq.BuildAppParam{
+		AppID:          param.AppID,
+		AppName:        app.Name,
+		AppVersionCode: param.VersionCode,
+		AppVersionName: param.VersionName,
+		TemplateType:   template.Type,
+		TemplateName:   getRepositoryName(template.RepositoryURL),
+	}
+
+	if err = uc.mq.PublishBuildApp(ctx, buildParam); err != nil {
+		log.Error(err, "error publishing build app message", buildParam)
+		return err
+	}
+
+	return nil
+}
+
+func (uc *Usecase) GetBuildAppStatus(ctx context.Context, appID string) (BuildStatus, error) {
+	result, err := uc.cache.GetBuildAppStatus(ctx, appID)
 	if err != nil {
-		log.Error(keystoreFolderPath, err, "cmd.ExecCommandWithContext() got error - buildAppAsync")
-		return
+		log.Error(err, "error getting build app status")
+		return BuildStatus{}, err
 	}
 
-	keystorePath := filepath.Join(keystoreFolderPath, keystoreFileName)
-	mvKeystoreCommand := fmt.Sprintf("mv %s %s", param.KeystorePath, keystorePath)
-	err = cmd.ExecCommandWithContext(ctx, mvKeystoreCommand)
-	if err != nil {
-		log.Error(mvKeystoreCommand, err, "cmd.ExecCommandWithContext() got error - buildAppAsync")
-		return
-	}
+	return BuildStatus{
+		Status:       BuildStatusEnum(result.Status),
+		URL:          result.URL,
+		ErrorMessage: result.ErrorMessage,
+	}, nil
+}
 
-	repoFolderPath := filepath.Join("./templates", getRepositoryName(template.RepositoryURL))
-	appFolderPath = filepath.Join("./garage", param.AppID+"/"+getRepositoryName(template.RepositoryURL))
-	if _, err := os.Stat(repoFolderPath); os.IsNotExist(err) {
-		cloneCommand := fmt.Sprintf("cd ./templates && git clone %s", template.RepositoryURL)
-		err = cmd.ExecCommandWithContext(ctx, cloneCommand)
-		if err != nil {
-			log.Error(cloneCommand, err, "cmd.ExecCommandWithContext() got error - buildAppAsync")
-			return
-		}
-	}
-
-	cpProjectCommand := fmt.Sprintf("cp -R %s %s", repoFolderPath, appFolderPath)
-	err = cmd.ExecCommandWithContext(ctx, cpProjectCommand)
-	if err != nil {
-		log.Error(cpProjectCommand, err, "cmd.ExecCommandWithContext() got error - buildAppAsync")
-		return
-	}
-
-	// TODO: Algorithm to inject app data, and icon
-	// TODO: Execute build command
-	// TODO: Upload artifact to github
-
-	log.Info("AMAN")
+func (uc *Usecase) SetBuildAppStatus(ctx context.Context, param UpdateBuildStatusParam) error {
+	return uc.cache.SetBuildAppStatus(ctx, redis.UpdateBuildStatusParam{
+		AppID: param.AppID,
+		BuildStatus: redis.BuildStatus{
+			Status:       redis.BuildStatusEnum(param.BuildStatus.Status),
+			URL:          param.BuildStatus.URL,
+			ErrorMessage: param.BuildStatus.ErrorMessage,
+		},
+	})
 }
 
 func getRepositoryName(url string) string {
