@@ -3,8 +3,8 @@ package handler
 import (
 	"dynapgen/constants"
 	"dynapgen/usecase"
-	"dynapgen/utils/assets"
-	"dynapgen/utils/log"
+	"dynapgen/util/assets"
+	"dynapgen/util/log"
 	"errors"
 	"net/http"
 	"strconv"
@@ -21,9 +21,9 @@ var (
 
 func (h *Handler) HandleCreateNewApp(ctx *gin.Context) {
 	var request NewAppRequest
-	err := ctx.BindJSON(&request)
+	err := ctx.ShouldBindJSON(&request)
 	if err != nil {
-		log.Error(nil, err, "ctx.BindJSON() got error - HandleCreateNewApp")
+		log.Error(err, "ctx.ShouldBindJSON() got error - HandleCreateNewApp", nil)
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -36,7 +36,7 @@ func (h *Handler) HandleCreateNewApp(ctx *gin.Context) {
 	}
 	err = h.usecase.NewApp(ctx, param)
 	if err != nil {
-		log.Error(request, err, "h.usecase.NewApp() got error - HandleCreateNewApp")
+		log.Error(err, "h.usecase.NewApp() got error - HandleCreateNewApp", request)
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -46,9 +46,9 @@ func (h *Handler) HandleCreateNewApp(ctx *gin.Context) {
 
 func (h *Handler) HandleCreateNewAds(ctx *gin.Context) {
 	var request NewAppAdsRequest
-	err := ctx.BindJSON(&request)
+	err := ctx.ShouldBindJSON(&request)
 	if err != nil {
-		log.Error(nil, err, "ctx.BindJSON() got error - HandleCreateNewAds")
+		log.Error(err, "ctx.ShouldBindJSON() got error - HandleCreateNewAds")
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -64,7 +64,7 @@ func (h *Handler) HandleCreateNewAds(ctx *gin.Context) {
 	}
 	err = h.usecase.NewAppAds(ctx, param)
 	if err != nil {
-		log.Error(request, err, "h.usecase.NewAppAds() got error - HandleCreateNewAds")
+		log.Error(err, "h.usecase.NewAppAds() got error - HandleCreateNewAds")
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -93,7 +93,7 @@ func (h *Handler) HandleGetAllApps(ctx *gin.Context) {
 	}
 	result, err := h.usecase.GetAllApps(ctx, param)
 	if err != nil {
-		log.Error(nil, err, "h.usecase.GetAllApps() got error - HandleGetAllApps")
+		log.Error(err, "h.usecase.GetAllApps() got error - HandleGetAllApps")
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -109,7 +109,7 @@ func (h *Handler) HandleGetApp(ctx *gin.Context) {
 	}
 	result, err := h.usecase.GetApp(ctx, appID)
 	if err != nil {
-		log.Error(map[string]interface{}{"app_id": appID}, err, "h.usecase.GetApp() got error - HandleGetApp")
+		log.Error(err, "h.usecase.GetApp() got error - HandleGetApp", map[string]interface{}{"app_id": appID})
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -125,7 +125,7 @@ func (h *Handler) HandleGetAppAds(ctx *gin.Context) {
 	}
 	result, err := h.usecase.GetAppAds(ctx, appID)
 	if err != nil {
-		log.Error(map[string]interface{}{"app_id": appID}, err, "h.usecase.GetAppAds() got error - HandleGetAppAds")
+		log.Error(err, "h.usecase.GetAppAds() got error - HandleGetAppAds", map[string]interface{}{"app_id": appID})
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -141,7 +141,7 @@ func (h *Handler) HandleGetFullApp(ctx *gin.Context) {
 	}
 	result, err := h.usecase.GetAppFull(ctx, appID)
 	if err != nil {
-		log.Error(map[string]interface{}{"app_id": appID}, err, "h.usecase.GetAppFull() got error - HandleGetFullApp")
+		log.Error(err, "h.usecase.GetAppFull() got error - HandleGetFullApp", map[string]interface{}{"app_id": appID})
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -157,7 +157,7 @@ func (h *Handler) HandleDeleteApp(ctx *gin.Context) {
 	}
 	err := h.usecase.DeleteApp(ctx, appID)
 	if err != nil {
-		log.Error(map[string]interface{}{"app_id": appID}, err, "h.usecase.DeleteApp() got error - HandleDeleteApp")
+		log.Error(err, "h.usecase.DeleteApp() got error - HandleDeleteApp", map[string]interface{}{"app_id": appID})
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -167,16 +167,16 @@ func (h *Handler) HandleDeleteApp(ctx *gin.Context) {
 
 func (h *Handler) HandleUpdateApp(ctx *gin.Context) {
 	var request App
-	err := ctx.BindJSON(&request)
+	err := ctx.ShouldBindJSON(&request)
 	if err != nil {
-		log.Error(nil, err, "ctx.BindJSON() got error - HandleUpdateApp")
+		log.Error(err, "ctx.ShouldBindJSON() got error - HandleUpdateApp")
 		WriteJson(ctx, nil, err)
 		return
 	}
 
 	err = h.usecase.UpdateApp(ctx, usecase.App(request))
 	if err != nil {
-		log.Error(request, err, "h.usecase.UpdateApp() got error - HandleUpdateApp")
+		log.Error(err, "h.usecase.UpdateApp() got error - HandleUpdateApp", request)
 		WriteJson(ctx, nil, err)
 		return
 	}
@@ -220,7 +220,7 @@ func (h *Handler) HandleUpdateAppIcon(ctx *gin.Context) {
 
 	err = h.usecase.UpdateAppIcon(ctx, appID, file.Filename, dst)
 	if err != nil {
-		log.Error(nil, err, "h.usecase.UpdateAppIcon() got error - HandleUpdateAppIcon")
+		log.Error(err, "h.usecase.UpdateAppIcon() got error - HandleUpdateAppIcon")
 		WriteJson(ctx, nil, err)
 		return
 	}

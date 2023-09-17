@@ -15,10 +15,10 @@ func New(redis *redis.Client) *Repository {
 	return &Repository{redis}
 }
 
-func (r *Repository) HSetEX(ctx context.Context, key, field string, value interface{}, expireSecond int64) error {
+func (r *Repository) HSetEX(ctx context.Context, key, field string, value interface{}, expire time.Duration) error {
 	_, err := r.redis.HSet(ctx, key, field, value).Result()
 	if err != nil {
 		return err
 	}
-	return r.redis.Expire(ctx, key, time.Duration(expireSecond)*time.Second).Err()
+	return r.redis.Expire(ctx, key, expire).Err()
 }

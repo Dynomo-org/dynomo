@@ -2,7 +2,7 @@ package handler
 
 import (
 	"dynapgen/usecase"
-	"dynapgen/utils/assets"
+	"dynapgen/util/assets"
 	"errors"
 	"fmt"
 	"net/http"
@@ -52,7 +52,7 @@ func (h *Handler) HandleBuildApp(ctx *gin.Context) {
 	dst := assets.GenerateAssetPath(file.Filename)
 	ctx.SaveUploadedFile(file, dst)
 
-	response, err := h.usecase.BuildApp(ctx, usecase.BuildAppParam{
+	err = h.usecase.BuildApp(ctx, usecase.BuildAppParam{
 		AppID:        appID,
 		KeystorePath: dst,
 	})
@@ -61,5 +61,5 @@ func (h *Handler) HandleBuildApp(ctx *gin.Context) {
 		return
 	}
 
-	WriteJson(ctx, response, nil)
+	WriteJson(ctx, nil, nil, http.StatusAccepted)
 }

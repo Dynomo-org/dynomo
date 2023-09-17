@@ -50,8 +50,9 @@ type App struct {
 	PrivacyPolicyLink          string      `json:"privacy_policy_link"`
 	Strings                    interface{} `json:"strings"`
 	ColorPrimary               string      `json:"color_primary"`
-	ColorPrimaryVariant        string      `json:"color_primary_variant"`
+	ColorSecondary             string      `json:"color_secondary"`
 	ColorOnPrimary             string      `json:"color_on_primary"`
+	ColorOnSecondary           string      `json:"color_on_secondary"`
 	EnableOpen                 bool        `json:"enable_open"`
 	EnableBanner               bool        `json:"enable_banner"`
 	EnableInterstitial         bool        `json:"enable_interstitial"`
@@ -111,9 +112,10 @@ type AppConfig struct {
 }
 
 type AppStyle struct {
-	ColorPrimary        string `json:"color_primary"`
-	ColorPrimaryVariant string `json:"color_primary_variant"`
-	ColorOnPrimary      string `json:"color_on_primary"`
+	ColorPrimary     string `json:"color_primary,omitempty"`
+	ColorSecondary   string `json:"color_secondary,omitempty"`
+	ColorOnPrimary   string `json:"color_on_primary,omitempty"`
+	ColorOnSecondary string `json:"color_on_secondary,omitempty"`
 }
 
 type AppAd struct {
@@ -181,11 +183,14 @@ func (app *App) updateWith(input App) {
 	if input.ColorPrimary != "" {
 		app.ColorPrimary = input.ColorPrimary
 	}
-	if input.ColorPrimaryVariant != "" {
-		app.ColorPrimaryVariant = input.ColorPrimaryVariant
+	if input.ColorSecondary != "" {
+		app.ColorSecondary = input.ColorSecondary
 	}
 	if input.ColorOnPrimary != "" {
 		app.ColorOnPrimary = input.ColorOnPrimary
+	}
+	if input.ColorOnSecondary != "" {
+		app.ColorOnSecondary = input.ColorOnSecondary
 	}
 
 	// string settings
@@ -229,9 +234,9 @@ func buildAppFull(app db.App, appAds []db.AppAds, appContents []db.AppContent) A
 		AppConfig: AppConfig{
 			Strings: app.Strings,
 			Style: AppStyle{
-				ColorPrimary:        app.ColorPrimary,
-				ColorPrimaryVariant: app.ColorPrimaryVariant,
-				ColorOnPrimary:      app.ColorOnPrimary,
+				ColorPrimary:   app.ColorPrimary,
+				ColorSecondary: app.ColorSecondary,
+				ColorOnPrimary: app.ColorOnPrimary,
 			},
 		},
 		AdsConfig: AdsConfig{

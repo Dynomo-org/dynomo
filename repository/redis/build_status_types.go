@@ -1,11 +1,4 @@
-package usecase
-
-type BuildAppParam struct {
-	AppID        string
-	VersionCode  int
-	VersionName  string
-	KeystorePath string
-}
+package redis
 
 type BuildStatusEnum int
 
@@ -13,6 +6,7 @@ const (
 	BuildStatusEnumSuccess BuildStatusEnum = iota + 1
 	BuildStatusEnumFailed
 	BuildStatusEnumInProgress
+	BuildStatusEnumPending
 )
 
 type UpdateBuildStatusParam struct {

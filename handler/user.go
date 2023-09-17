@@ -21,7 +21,7 @@ func (h *Handler) HandleGetUserInfo(ctx *gin.Context) {
 
 func (h *Handler) HandleLoginUser(ctx *gin.Context) {
 	var request LoginUserRequest
-	if err := ctx.BindJSON(&request); err != nil {
+	if err := ctx.ShouldBindJSON(&request); err != nil {
 		WriteJson(ctx, nil, err, http.StatusBadRequest)
 		return
 	}
@@ -45,7 +45,7 @@ func (h *Handler) HandleLoginUser(ctx *gin.Context) {
 
 func (h *Handler) HandleRegisterUser(ctx *gin.Context) {
 	var request RegisterUserRequest
-	if err := ctx.BindJSON(&request); err != nil {
+	if err := ctx.ShouldBindJSON(&request); err != nil {
 		WriteJson(ctx, nil, err, http.StatusBadRequest)
 		return
 	}

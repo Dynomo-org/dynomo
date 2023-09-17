@@ -10,9 +10,11 @@ import (
 )
 
 const (
-	defaultTTL = 24 * 60 * 60 * time.Second
+	TTL1Day      = 24 * 60 * 60 * time.Second
+	TTL15Minutes = 15 * 60 * time.Second
 
-	keyApp = "app_%s"
+	keyApp            = "app_%s"
+	keyBuildAppStatus = "app_%s_build_app"
 )
 
 func (r *Repository) GetAppFullByID(ctx context.Context, appID string) (AppFull, error) {
@@ -48,5 +50,15 @@ func (r *Repository) InsertAppFull(ctx context.Context, app AppFull) error {
 		return err
 	}
 
-	return r.redis.SetEx(ctx, key, string(marshalled), defaultTTL).Err()
+	return r.redis.SetEx(ctx, key, string(marshalled), TTL1Day).Err()
+}
+
+func (r *Repository) SetBuildAppStatus(ctx context.Context, param UpdateBuildStatusParam) error {
+	key := fmt.Sprintf(keyBuildAppStatus, param.AppID)
+	marshalled, err := json.Marshal(param.BuildStatus)
+	if err != nil {
+		return err
+	}
+
+	return r.redis.SetEx(ctx, key, string(marshalled), TTL15Minutes).Err()
 }

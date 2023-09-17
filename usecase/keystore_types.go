@@ -1,8 +1,6 @@
 package usecase
 
-import "dynapgen/repository/redis"
-
-type GenerateStoreParam struct {
+type BuildKeystoreParam struct {
 	AppID         string
 	FullName      string
 	Organization  string
@@ -10,18 +8,4 @@ type GenerateStoreParam struct {
 	Alias         string
 	KeyPassword   string
 	StorePassword string
-}
-
-type Keystore struct {
-	Status       uint8
-	URL          string
-	ErrorMessage string
-}
-
-func convertKeystoreFromRepo(keystore redis.Keystore) Keystore {
-	return Keystore{
-		Status:       uint8(keystore.Status),
-		URL:          keystore.URL,
-		ErrorMessage: keystore.ErrorMessage,
-	}
 }

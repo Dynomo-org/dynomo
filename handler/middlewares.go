@@ -2,7 +2,7 @@ package handler
 
 import (
 	"dynapgen/constants"
-	"dynapgen/utils/tokenizer"
+	"dynapgen/util/tokenizer"
 	"errors"
 	"net/http"
 	"strings"

@@ -13,7 +13,6 @@ func ExecCommandWithContext(ctx context.Context, command string) error {
 		fmt.Println(fmt.Sprint(err) + ": " + string(output))
 		return err
 	}
-	fmt.Println(string(output))
 
 	return err
 }

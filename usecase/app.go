@@ -4,7 +4,7 @@ import (
 	"context"
 	"dynapgen/repository/db"
 	"dynapgen/repository/github"
-	"dynapgen/utils/log"
+	"dynapgen/util/log"
 	"errors"
 	"os"
 	"strings"
@@ -21,7 +21,7 @@ var (
 func (uc *Usecase) GetAllApps(ctx context.Context, param GetAppListParam) (GetAppListResponse, error) {
 	apps, err := uc.db.GetAppsByUserID(ctx, param.OwnerID)
 	if err != nil {
-		log.Error(param, err, "uc.db.GetApps() got error - GetAllApp")
+		log.Error(err, "uc.db.GetApps() got error - GetAllApp", param)
 		return GetAppListResponse{}, err
 	}
 
@@ -43,7 +43,7 @@ func (uc *Usecase) GetAllApps(ctx context.Context, param GetAppListParam) (GetAp
 func (uc *Usecase) GetApp(ctx context.Context, appID string) (App, error) {
 	app, err := uc.db.GetApp(ctx, appID)
 	if err != nil {
-		log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetApp() got error - GetApp")
+		log.Error(err, "uc.db.GetApp() got error - GetApp", map[string]interface{}{"app_id": appID})
 		return App{}, err
 	}
 	if app.ID == "" {
@@ -56,7 +56,7 @@ func (uc *Usecase) GetApp(ctx context.Context, appID string) (App, error) {
 func (uc *Usecase) GetAppAds(ctx context.Context, appID string) ([]AppAds, error) {
 	ads, err := uc.db.GetAppAdsByAppID(ctx, appID)
 	if err != nil {
-		log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetAppAdsByAppID() got error - GetAppAds")
+		log.Error(err, "uc.db.GetAppAdsByAppID() got error - GetAppAds", map[string]interface{}{"app_id": appID})
 		return nil, err
 	}
 
@@ -71,7 +71,7 @@ func (uc *Usecase) GetAppAds(ctx context.Context, appID string) ([]AppAds, error
 func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error) {
 	cachedApp, err := uc.cache.GetAppFullByID(ctx, appID)
 	if err != nil {
-		log.Error(map[string]interface{}{"app_id": appID}, err, "uc.cache.GetUserRoleIDMapByUserID() got error - GetAppFull")
+		log.Error(err, "uc.cache.GetUserRoleIDMapByUserID() got error - GetAppFull", map[string]interface{}{"app_id": appID})
 	}
 	if cachedApp.ID != "" {
 		return convertAppFullFromCache(cachedApp), nil
@@ -91,7 +91,7 @@ func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error
 		defer wg.Done()
 		app, err = uc.db.GetApp(ctx, appID)
 		if err != nil {
-			log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetApp() got error - GetAppFull")
+			log.Error(err, "uc.db.GetApp() got error - GetAppFull", map[string]interface{}{"app_id": appID})
 			errMsgs = append(errMsgs, err.Error())
 		}
 	}()
@@ -101,7 +101,7 @@ func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error
 		defer wg.Done()
 		appAds, err = uc.db.GetAppAdsByAppID(ctx, appID)
 		if err != nil {
-			log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetAppAdsByAppID() got error - GetAppFull")
+			log.Error(err, "uc.db.GetAppAdsByAppID() got error - GetAppFull", map[string]interface{}{"app_id": appID})
 			errMsgs = append(errMsgs, err.Error())
 		}
 	}()
@@ -111,21 +111,21 @@ func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error
 		defer wg.Done()
 		appContents, err = uc.db.GetAppContentsByAppID(ctx, appID)
 		if err != nil {
-			log.Error(map[string]interface{}{"app_id": appID}, err, "uc.db.GetAppContentsByAppID() got error - GetAppFull")
+			log.Error(err, "uc.db.GetAppContentsByAppID() got error - GetAppFull", map[string]interface{}{"app_id": appID})
 			errMsgs = append(errMsgs, err.Error())
 		}
 	}()
 
 	wg.Wait()
 	if len(errMsgs) > 0 {
-		log.Error(map[string]interface{}{"app_id": appID}, errors.New(strings.Join(errMsgs, ", ")), "error getting app full - GetAppFull")
+		log.Error(errors.New(strings.Join(errMsgs, ", ")), "error getting app full - GetAppFull", map[string]interface{}{"app_id": appID})
 		return AppFull{}, errorFailedToGetAppFull
 	}
 
 	result := buildAppFull(app, appAds, appContents)
 	err = uc.cache.InsertAppFull(ctx, convertAppFullToCache(result))
 	if err != nil {
-		log.Error(nil, err, "uc.cache.InsertAppFull() got error - InsertAppFull")
+		log.Error(err, "uc.cache.InsertAppFull() got error - InsertAppFull")
 	}
 
 	return result, nil
@@ -141,7 +141,7 @@ func (uc *Usecase) NewApp(ctx context.Context, request NewAppRequest) error {
 		VersionCode:                "1.0.0",
 		IconURL:                    "https://raw.githubusercontent.com/Dynapgen/master-storage-1/main/assets/default-icon.png",
 		ColorPrimary:               "#FFBB86FC",
-		ColorPrimaryVariant:        "#FF3700B3",
+		ColorSecondary:             "#FF3700B3",
 		ColorOnPrimary:             "#FFFFFFFF",
 		InterstitialIntervalSecond: 30,
 		CreatedAt:                  time.Now(),
@@ -149,7 +149,7 @@ func (uc *Usecase) NewApp(ctx context.Context, request NewAppRequest) error {
 
 	err := uc.db.InsertApp(ctx, app)
 	if err != nil {
-		log.Error(request, err, "uc.repo.InsertApp() got error - NewApp")
+		log.Error(err, "uc.repo.InsertApp() got error - NewApp", request)
 		return err
 	}
 
@@ -171,13 +171,13 @@ func (uc *Usecase) NewAppAds(ctx context.Context, request NewAppAdsRequest) erro
 
 	err := uc.db.InsertAppAds(ctx, ads)
 	if err != nil {
-		log.Error(request, err, "uc.db.InsertAppAds() got error - NewAppAds")
+		log.Error(err, "uc.db.InsertAppAds() got error - NewAppAds", request)
 		return err
 	}
 
 	err = uc.cache.InvalidateAppFull(ctx, request.AppID)
 	if err != nil {
-		log.Error(map[string]interface{}{}, err, "uc.cache.InvalidateApp() got error - NewAppAds")
+		log.Error(err, "uc.cache.InvalidateApp() got error - NewAppAds", map[string]interface{}{})
 	}
 
 	return nil
@@ -186,7 +186,7 @@ func (uc *Usecase) NewAppAds(ctx context.Context, request NewAppAdsRequest) erro
 func (uc *Usecase) UpdateApp(ctx context.Context, request App) error {
 	app, err := uc.GetApp(ctx, request.ID)
 	if err != nil {
-		log.Error(app, err, "uc.Get() got error - UpdateApp")
+		log.Error(err, "uc.Get() got error - UpdateApp", app)
 	}
 
 	app.updateWith(request)
@@ -195,13 +195,13 @@ func (uc *Usecase) UpdateApp(ctx context.Context, request App) error {
 	param.UpdatedAt = &timeNow
 	err = uc.db.UpdateApp(ctx, param)
 	if err != nil {
-		log.Error(param, err, "uc.db.UpdateApp() got error - UpdateApp")
+		log.Error(err, "uc.db.UpdateApp() got error - UpdateApp", param)
 		return err
 	}
 
 	err = uc.cache.InvalidateAppFull(ctx, app.ID)
 	if err != nil {
-		log.Error(app, err, "uc.cache.InvalidateApp() got error - UpdateApp")
+		log.Error(err, "uc.cache.InvalidateApp() got error - UpdateApp", app)
 	}
 
 	return nil
@@ -220,7 +220,7 @@ func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, lo
 
 	app, err := uc.GetApp(ctx, appID)
 	if err != nil {
-		log.Error(meta, err, "uc.GetApp() got error - UpdateAppIcon")
+		log.Error(err, "uc.GetApp() got error - UpdateAppIcon", meta)
 		return err
 	}
 
@@ -231,7 +231,7 @@ func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, lo
 		ReplaceIfNameExists:   true,
 	})
 	if err != nil {
-		log.Error(meta, err, "uc.repo.UploadToGithub() got error - UpdateAppIcon")
+		log.Error(err, "uc.repo.UploadToGithub() got error - UpdateAppIcon", meta)
 		return err
 	}
 
@@ -241,7 +241,7 @@ func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, lo
 	param := db.App(app)
 	err = uc.db.UpdateApp(ctx, param)
 	if err != nil {
-		log.Error(param, err, "uc.repo.UpdateAppOnDB() got error - UpdateAppIcon")
+		log.Error(err, "uc.repo.UpdateAppOnDB() got error - UpdateAppIcon", param)
 		return err
 	}
 
@@ -251,7 +251,7 @@ func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, lo
 func (uc *Usecase) DeleteApp(ctx context.Context, appID string) error {
 	err := uc.db.DeleteApp(ctx, appID)
 	if err != nil {
-		log.Error(map[string]interface{}{"app_id": appID}, err, "uc.repo.DeleteApp() - DeleteApp")
+		log.Error(err, "uc.repo.DeleteApp() - DeleteApp", map[string]interface{}{"app_id": appID})
 		return err
 	}
 
