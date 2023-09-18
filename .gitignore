@@ -3,6 +3,8 @@ dynapgen
 *.env
 /assets
 /db
+/redis
+/nsq
 ssh*
 /garage
 /templates

@@ -1,7 +1,5 @@
 FROM golang:1.20
 
-RUN apt-get update && apt install -y openjdk-17-jre && apt install -y openjdk-17-jdk
-
 WORKDIR /usr/src/app
 
 COPY go.mod go.sum ./
