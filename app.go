@@ -80,7 +80,7 @@ func main() {
 
 	// init NSQ connection
 	nsqConfig := nsq.NewConfig()
-	nsqConn, err := nsq.NewProducer("127.0.0.1:4150", nsqConfig)
+	nsqConn, err := nsq.NewProducer(viper.GetString("DNM_NSQ_ADDRESS"), nsqConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func main() {
 // init redis with retry mechanism
 func initRedis(redisOpt *redis.Options) *redis.Client {
 	for i := 0; i < maxConnectionRetryAttempts; i++ {
-		fmt.Printf("Connecting to redis (%d/%d)\n", i+1, maxConnectionRetryAttempts)
+		log.Info(fmt.Sprintf("Connecting to redis (%d/%d)\n", i+1, maxConnectionRetryAttempts))
 		if client := redis.NewClient(redisOpt); client != nil {
 			return client
 		}
@@ -121,7 +121,7 @@ func initRedis(redisOpt *redis.Options) *redis.Client {
 func initDB(driver, connectionString string) (*sqlx.DB, error) {
 	var connectingError error
 	for i := 0; i < maxConnectionRetryAttempts; i++ {
-		fmt.Printf("Connecting to DB (%d/%d)\n", i+1, maxConnectionRetryAttempts)
+		log.Info(fmt.Sprintf("Connecting to DB (%d/%d)\n", i+1, maxConnectionRetryAttempts))
 		db, err := sqlx.Connect("postgres", connectionString)
 		if err != nil {
 			connectingError = err

@@ -1,10 +1,7 @@
 version: "3.9"
 services:
   app:
-    image: "ibrahimsyah/dynapgen:latest"
-    environment:
-      ENV: production
-      GITHUB_CLIENT_KEY: ${GITHUB_CLIENT_KEY}
+    build: "."
     ports:
       - "3002:5000"
     volumes:
@@ -18,8 +15,34 @@ services:
       POSTGRES_DB: ${DB_NAME}
     ports:
       - "${DB_OPEN_PORT}:5432"
-      - "5432:5432"
+      - "5432"
     volumes:
       - ${DB_LOCAL_STORAGE}:/var/lib/postgresql/data
+  nsqlookupd:
+    image: nsqio/nsq
+    command: /nsqlookupd
+    ports:
+      - "4160"
+      - "${NSQLOOKUPD_OPEN_PORT}:4161"
+  nsqd:
+    image: nsqio/nsq
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160 --broadcast-address=nsqd
+    depends_on:
+      - nsqlookupd
+    ports:
+      - "${NSQD_TCP_OPEN_PORT}:4150" # so consumer can connect to this nsqd.
+      - "4150"
+      - "4151"
+    volumes:
+      - ${NSQ_LOCAL_STORAGE}:/data
+  nsqadmin:
+    image: nsqio/nsq
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    depends_on:
+      - nsqlookupd  
+    ports:
+      - "${NSQADMIN_OPEN_PORT}:4171"
   redis:
     image: "redis:alpine"
+    volumes:
+      - ${REDIS_LOCAL_STORAGE}:/data

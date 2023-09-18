@@ -14,7 +14,7 @@ func (uc *Usecase) BuildKeystore(ctx context.Context, param BuildKeystoreParam) 
 			Status: redis.BuildStatusEnumPending,
 		},
 	}); err != nil {
-		log.Error(err, "error initiating build keystore", nil)
+		log.Error(err, "error initiating build keystore")
 		return err
 	}
 
