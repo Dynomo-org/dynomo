@@ -12,12 +12,6 @@ jobs:
     steps:
       - name: Checking out branch
         uses: actions/checkout@v2
-      - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@v5
-        with:
-          name: ibrahimsyah/dynapgen
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Deploy to cloud server
         uses: fifsky/ssh-action@master
         with:
@@ -29,6 +23,5 @@ jobs:
             git clone https://github.com/ibrahimsyah-tkpd/dynapgen
             cd ~/dynapgen
             git pull origin main
-            docker pull ibrahimsyah/dynapgen:latest
             docker compose down --remove-orphans
             docker compose up --build -d
