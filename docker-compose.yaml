@@ -1,11 +1,17 @@
 version: "3.9"
 services:
   app:
-    build: "."
+    build: .
+    restart: always
+    environment:
+      - ENV=production
     ports:
       - "3002:5000"
     volumes:
       - ./:/usr/src/app/
+    depends_on:
+      db:
+        condition: service_healthy
   db:
     image: "postgres"
     restart: always
@@ -18,6 +24,27 @@ services:
       - "5432"
     volumes:
       - ${DB_LOCAL_STORAGE}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --dbname=${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./migration:/migrations
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://${DB_USERNAME}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable",
+        "up"
+      ]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
   nsqlookupd:
     image: nsqio/nsq
     command: /nsqlookupd
