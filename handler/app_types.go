@@ -1,6 +1,6 @@
 package handler
 
-import "time"
+import "dynapgen/usecase"
 
 const (
 	defaultPerPage = 10
@@ -23,29 +23,45 @@ type NewAppAdsRequest struct {
 }
 
 type App struct {
-	Total                      int         `json:"total"`
-	ID                         string      `json:"id"`
-	OwnerID                    string      `json:"owner_id"`
-	Name                       string      `json:"name"`
-	PackageName                string      `json:"package_name"`
-	TemplateID                 string      `json:"template_id"`
-	AdmobAppID                 string      `json:"admob_app_id"`
-	AppLovinSDKKey             string      `json:"app_lovin_sdk_key"`
-	Version                    int         `json:"version"`
-	VersionCode                string      `json:"version_code"`
-	IconURL                    string      `json:"icon_url"`
-	PrivacyPolicyLink          string      `json:"privacy_policy_link"`
-	Strings                    interface{} `json:"strings"`
-	ColorPrimary               string      `json:"color_primary"`
-	ColorSecondary             string      `json:"color_secondary"`
-	ColorOnPrimary             string      `json:"color_on_primary"`
-	ColorOnSecondary           string      `json:"color_on_secondary"`
-	EnableOpen                 bool        `json:"enable_open"`
-	EnableBanner               bool        `json:"enable_banner"`
-	EnableInterstitial         bool        `json:"enable_interstitial"`
-	EnableNative               bool        `json:"enable_native"`
-	EnableReward               bool        `json:"enable_reward"`
-	InterstitialIntervalSecond int         `json:"interstitial_interval_second"`
-	CreatedAt                  time.Time   `json:"created_at"`
-	UpdatedAt                  *time.Time  `json:"updated_at"`
+	OwnerID                    string            `json:"owner_id"`
+	Name                       string            `json:"name"`
+	PackageName                string            `json:"package_name"`
+	TemplateID                 string            `json:"template_id"`
+	AdmobAppID                 string            `json:"admob_app_id"`
+	AppLovinSDKKey             string            `json:"app_lovin_sdk_key"`
+	Version                    int               `json:"version"`
+	VersionCode                string            `json:"version_code"`
+	IconURL                    string            `json:"icon_url"`
+	PrivacyPolicyLink          string            `json:"privacy_policy_link"`
+	Strings                    map[string]string `json:"strings"`
+	Styles                     map[string]string `json:"styles"`
+	EnableOpen                 bool              `json:"enable_open"`
+	EnableBanner               bool              `json:"enable_banner"`
+	EnableInterstitial         bool              `json:"enable_interstitial"`
+	EnableNative               bool              `json:"enable_native"`
+	EnableReward               bool              `json:"enable_reward"`
+	InterstitialIntervalSecond int               `json:"interstitial_interval_second"`
+}
+
+func (a *App) convertToUsecase() usecase.App {
+	return usecase.App{
+		OwnerID:                    a.OwnerID,
+		Name:                       a.Name,
+		PackageName:                a.PackageName,
+		TemplateID:                 a.TemplateID,
+		AdmobAppID:                 a.AdmobAppID,
+		AppLovinSDKKey:             a.AppLovinSDKKey,
+		Version:                    a.Version,
+		VersionCode:                a.VersionCode,
+		IconURL:                    a.IconURL,
+		PrivacyPolicyLink:          a.PrivacyPolicyLink,
+		Strings:                    a.Strings,
+		Styles:                     a.Styles,
+		EnableOpen:                 a.EnableOpen,
+		EnableBanner:               a.EnableBanner,
+		EnableInterstitial:         a.EnableInterstitial,
+		EnableNative:               a.EnableNative,
+		EnableReward:               a.EnableReward,
+		InterstitialIntervalSecond: a.InterstitialIntervalSecond,
+	}
 }

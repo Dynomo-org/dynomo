@@ -8,7 +8,7 @@ import (
 	"dynapgen/util/tokenizer"
 	"errors"
 
-	"github.com/google/uuid"
+	"github.com/rs/xid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -123,7 +123,7 @@ func (uc *Usecase) RegisterUser(ctx context.Context, user User) (AuthUserRespons
 		return AuthUserResponse{}, err
 	}
 
-	userID := uuid.NewString()
+	userID := xid.New().String()
 	param := db.User{
 		ID:       userID,
 		Email:    user.Email,

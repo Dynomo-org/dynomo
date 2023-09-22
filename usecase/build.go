@@ -2,16 +2,20 @@ package usecase
 
 import (
 	"context"
+	"dynapgen/repository/github"
 	"dynapgen/repository/nsq"
 	"dynapgen/repository/redis"
+	"dynapgen/util/cmd"
+	"dynapgen/util/file"
 	"dynapgen/util/log"
+	"fmt"
 	"strings"
 )
 
 func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 	app, err := uc.db.GetApp(ctx, param.AppID)
 	if err != nil {
-		log.Error(err, "uc.db.GetApp() got error - buildAppAsync")
+		log.Error(err, "uc.db.GetApp() got error - BuildApp")
 		return err
 	}
 
@@ -21,12 +25,29 @@ func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 
 	template, err := uc.GetTemplateByID(ctx, app.TemplateID)
 	if err != nil {
-		log.Error(err, "uc.GetTemplateByID() got error - buildAppAsync")
+		log.Error(err, "uc.GetTemplateByID() got error - BuildApp")
 		return err
 	}
 
 	if template.ID == "" || template.RepositoryURL == "" {
 		return nil
+	}
+
+	keystoreUrl, err := uc.github.Upload(ctx, github.UploadFileParam{
+		FilePathLocal:       param.KeystorePath,
+		FilePathRemote:      file.GenerateUniqueGithubFilePath(file.GithubFolderKeystore, file.GetFilenameFromPath(param.KeystorePath)),
+		ReplaceIfNameExists: true,
+	})
+	if err != nil {
+		log.Error(err, "uc.githb.Upload() got error - BuildApp", param)
+		return err
+	}
+
+	// clean up local file
+	cleanupCommand := fmt.Sprintf("rm %s", param.KeystorePath)
+	if err := cmd.ExecCommandWithContext(ctx, cleanupCommand); err != nil {
+		log.Error(err, "error cleaning up updated app icon - BuildApp", cleanupCommand)
+		return err
 	}
 
 	if err = uc.cache.SetBuildAppStatus(ctx, redis.UpdateBuildStatusParam{
@@ -35,7 +56,7 @@ func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 			Status: redis.BuildStatusEnumPending,
 		},
 	}); err != nil {
-		log.Error(err, "error initiating build app", nil)
+		log.Error(err, "error initiating build app - BuildApp", nil)
 		return err
 	}
 
@@ -46,10 +67,11 @@ func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 		AppVersionName: param.VersionName,
 		TemplateType:   template.Type,
 		TemplateName:   getRepositoryName(template.RepositoryURL),
+		KeystoreUrl:    keystoreUrl,
 	}
 
 	if err = uc.mq.PublishBuildApp(ctx, buildParam); err != nil {
-		log.Error(err, "error publishing build app message", buildParam)
+		log.Error(err, "error publishing build app message - BuildApp", buildParam)
 		return err
 	}
 
