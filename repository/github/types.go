@@ -1,8 +1,7 @@
 package github
 
 type UploadFileParam struct {
-	FilePathLocal         string
-	FileName              string
-	DestinationFolderPath string
-	ReplaceIfNameExists   bool
+	FilePathLocal       string
+	FilePathRemote      string
+	ReplaceIfNameExists bool
 }

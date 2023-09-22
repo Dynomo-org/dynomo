@@ -2,26 +2,15 @@ package redis
 
 import (
 	"dynapgen/constants"
-	"time"
 )
 
 type AppFull struct {
-	ID                string       `json:"id,omitempty"`
-	OwnerID           string       `json:"owner_id,omitempty"`
-	Name              string       `json:"name,omitempty"`
-	PackageName       string       `json:"package_name,omitempty"`
-	TemplateID        string       `json:"template_id,omitempty"`
-	AdmobAppID        string       `json:"admob_app_id,omitempty"`
-	AppLovinSDKKey    string       `json:"app_lovin_sdk_key,omitempty"`
-	Version           int          `json:"version,omitempty"`
-	VersionCode       string       `json:"version_code,omitempty"`
-	IconURL           string       `json:"icon_url,omitempty"`
-	PrivacyPolicyLink string       `json:"privacy_policy_link,omitempty"`
-	AppConfig         AppConfig    `json:"app_config,omitempty"`
-	AdsConfig         AdsConfig    `json:"ads_config,omitempty"`
-	Contents          []AppContent `json:"contents,omitempty"`
-	CreatedAt         time.Time    `json:"created_at,omitempty"`
-	UpdatedAt         *time.Time   `json:"updated_at,omitempty"`
+	ID             string       `json:"id,omitempty"`
+	Name           string       `json:"name,omitempty"`
+	AdmobAppID     string       `json:"admob_app_id,omitempty"`
+	AppLovinSDKKey string       `json:"app_lovin_sdk_key,omitempty"`
+	AdsConfig      AdsConfig    `json:"ads_config,omitempty"`
+	Contents       []AppContent `json:"contents,omitempty"`
 }
 
 type AdsConfig struct {
@@ -50,11 +39,6 @@ type AppContent struct {
 	Title       string `json:"title,omitempty"`
 	Description string `json:"description,omitempty"`
 	Content     string `json:"content,omitempty"`
-}
-
-type AppConfig struct {
-	Strings interface{} `json:"strings,omitempty"`
-	Style   AppStyle    `json:"style,omitempty"`
 }
 
 type AppStyle struct {

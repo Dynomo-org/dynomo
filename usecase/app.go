@@ -4,14 +4,17 @@ import (
 	"context"
 	"dynapgen/repository/db"
 	"dynapgen/repository/github"
+	"dynapgen/util/cmd"
+	"dynapgen/util/file"
 	"dynapgen/util/log"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/rs/xid"
 )
 
 var (
@@ -27,14 +30,7 @@ func (uc *Usecase) GetAllApps(ctx context.Context, param GetAppListParam) (GetAp
 
 	result := make([]App, 0, len(apps))
 	for _, app := range apps {
-		result = append(result, App{
-			ID:          app.ID,
-			Name:        app.Name,
-			IconURL:     app.IconURL,
-			PackageName: app.PackageName,
-			CreatedAt:   app.CreatedAt,
-			UpdatedAt:   app.UpdatedAt,
-		})
+		result = append(result, convertAppFromDB(app))
 	}
 
 	return buildAppListResponse(result, param), nil
@@ -50,7 +46,7 @@ func (uc *Usecase) GetApp(ctx context.Context, appID string) (App, error) {
 		return App{}, errorAppNotFound
 	}
 
-	return App(app), nil
+	return convertAppFromDB(app), nil
 }
 
 func (uc *Usecase) GetAppAds(ctx context.Context, appID string) ([]AppAds, error) {
@@ -68,6 +64,7 @@ func (uc *Usecase) GetAppAds(ctx context.Context, appID string) ([]AppAds, error
 	return result, nil
 }
 
+// Get App Full for mobile client usage. Aggregating app - ads - content
 func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error) {
 	cachedApp, err := uc.cache.GetAppFullByID(ctx, appID)
 	if err != nil {
@@ -131,25 +128,37 @@ func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error
 	return result, nil
 }
 
-func (uc *Usecase) NewApp(ctx context.Context, request NewAppRequest) error {
-	app := db.App{
-		ID:                         uuid.NewString(),
-		OwnerID:                    request.OwnerID,
-		Name:                       request.AppName,
-		PackageName:                request.PackageName,
+func (uc *Usecase) NewApp(ctx context.Context, param NewAppRequest) error {
+	app := App{
+		ID:                         xid.New().String(),
+		OwnerID:                    param.OwnerID,
+		Name:                       param.AppName,
+		PackageName:                param.PackageName,
 		Version:                    1,
 		VersionCode:                "1.0.0",
 		IconURL:                    "https://raw.githubusercontent.com/Dynapgen/master-storage-1/main/assets/default-icon.png",
-		ColorPrimary:               "#FFBB86FC",
-		ColorSecondary:             "#FF3700B3",
-		ColorOnPrimary:             "#FFFFFFFF",
-		InterstitialIntervalSecond: 30,
+		TemplateID:                 param.TemplateID,
+		InterstitialIntervalSecond: 120,
 		CreatedAt:                  time.Now(),
 	}
 
-	err := uc.db.InsertApp(ctx, app)
+	appStrings, err := generateAppStrings(param.TemplateID)
 	if err != nil {
-		log.Error(err, "uc.repo.InsertApp() got error - NewApp", request)
+		log.Error(err, "generateAppStrings got error - New App", param)
+		return err
+	}
+
+	appStyles, err := generateAppStyles(param.TemplateID)
+	if err != nil {
+		log.Error(err, "generateAppStyle got error - New App", param)
+		return err
+	}
+
+	app.Strings = appStrings
+	app.Styles = appStyles
+
+	if err = uc.db.InsertApp(ctx, app.convertAppToDB()); err != nil {
+		log.Error(err, "uc.repo.InsertApp() got error - NewApp", param)
 		return err
 	}
 
@@ -158,7 +167,7 @@ func (uc *Usecase) NewApp(ctx context.Context, request NewAppRequest) error {
 
 func (uc *Usecase) NewAppAds(ctx context.Context, request NewAppAdsRequest) error {
 	ads := db.AppAds{
-		ID:               uuid.NewString(),
+		ID:               xid.New().String(),
 		AppID:            request.AppID,
 		Type:             request.Type,
 		OpenAdID:         request.OpenAdID,
@@ -190,17 +199,13 @@ func (uc *Usecase) UpdateApp(ctx context.Context, request App) error {
 	}
 
 	app.updateWith(request)
-	timeNow := time.Now()
-	param := db.App(app)
-	param.UpdatedAt = &timeNow
-	err = uc.db.UpdateApp(ctx, param)
-	if err != nil {
+	param := app.convertAppToDB()
+	if err = uc.db.UpdateApp(ctx, param); err != nil {
 		log.Error(err, "uc.db.UpdateApp() got error - UpdateApp", param)
 		return err
 	}
 
-	err = uc.cache.InvalidateAppFull(ctx, app.ID)
-	if err != nil {
+	if err = uc.cache.InvalidateAppFull(ctx, app.ID); err != nil {
 		log.Error(err, "uc.cache.InvalidateApp() got error - UpdateApp", app)
 	}
 
@@ -225,10 +230,9 @@ func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, lo
 	}
 
 	iconURL, err := uc.github.Upload(ctx, github.UploadFileParam{
-		FilePathLocal:         localPath,
-		FileName:              iconName,
-		DestinationFolderPath: appID + "/",
-		ReplaceIfNameExists:   true,
+		FilePathLocal:       localPath,
+		FilePathRemote:      file.GenerateUniqueGithubFilePath(file.GithubFolderIcon, iconName),
+		ReplaceIfNameExists: true,
 	})
 	if err != nil {
 		log.Error(err, "uc.repo.UploadToGithub() got error - UpdateAppIcon", meta)
@@ -238,10 +242,16 @@ func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, lo
 	timeNow := time.Now()
 	app.IconURL = iconURL
 	app.UpdatedAt = &timeNow
-	param := db.App(app)
+	param := app.convertAppToDB()
 	err = uc.db.UpdateApp(ctx, param)
 	if err != nil {
 		log.Error(err, "uc.repo.UpdateAppOnDB() got error - UpdateAppIcon", param)
+		return err
+	}
+
+	cleanupCommand := fmt.Sprintf("rm %s", localPath)
+	if err := cmd.ExecCommandWithContext(ctx, cleanupCommand); err != nil {
+		log.Error(err, "error cleaning up updated app icon - UpdateAppIcon", cleanupCommand)
 		return err
 	}
 
@@ -270,4 +280,20 @@ func buildAppListResponse(apps []App, param GetAppListParam) GetAppListResponse 
 		TotalPage: apps[0].Total / param.PerPage,
 		Page:      param.Page,
 	}
+}
+
+func generateAppStrings(templateID string) (map[string]string, error) {
+	if value, found := templateIDStringMap[templateID]; found {
+		return value, nil
+	}
+
+	return nil, errors.New("template ID not found")
+}
+
+func generateAppStyles(templateID string) (map[string]string, error) {
+	if value, found := templateIDStyleMap[templateID]; found {
+		return value, nil
+	}
+
+	return nil, errors.New("template ID not found")
 }

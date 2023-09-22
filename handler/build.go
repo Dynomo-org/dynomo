@@ -48,8 +48,9 @@ func (h *Handler) HandleBuildApp(ctx *gin.Context) {
 		return
 	}
 
-	file.Filename = fmt.Sprintf("keystore-%s.%s", appID, filenameSegments[len(filenameSegments)-1])
-	dst := assets.GenerateAssetPath(file.Filename)
+	// TODO: uniform keystore naming
+	// upload to github with same folder
+	dst := assets.GenerateWorkFilePath(fmt.Sprintf("%s.%s", file.Filename, fileExt))
 	ctx.SaveUploadedFile(file, dst)
 
 	err = h.usecase.BuildApp(ctx, usecase.BuildAppParam{

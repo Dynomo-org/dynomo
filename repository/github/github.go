@@ -2,10 +2,10 @@ package github
 
 import (
 	"context"
+	"dynapgen/util/file"
 	"encoding/base64"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -28,7 +28,7 @@ var (
 )
 
 func (r *Repository) getRef(ctx context.Context) (*github.Reference, error) {
-	repoName := viper.GetString("GITHUB_REPO_NAME")
+	repoName := viper.GetString("DYM_REPO_NAME")
 	if ref, _, err := r.github.Git.GetRef(ctx, ownerName, repoName, "refs/heads/"+commitBranch); err == nil {
 		return ref, nil
 	}
@@ -48,15 +48,13 @@ func (r *Repository) getRef(ctx context.Context) (*github.Reference, error) {
 }
 
 func (r *Repository) Upload(ctx context.Context, param UploadFileParam) (string, error) {
-	repoName := viper.GetString("GITHUB_REPO_NAME")
+	repoName := viper.GetString("DYM_REPO_NAME")
 	ref, err := r.getRef(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	fileNameSegments := strings.Split(param.FileName, ".")
-	realFileName := fileNameSegments[0] + strconv.FormatInt(time.Now().Unix(), 10) + "." + fileNameSegments[1]
-	filePathRemote := param.DestinationFolderPath + realFileName
+	fileName := file.GetFilenameFromPath(param.FilePathRemote)
 
 	tree, _, err := r.github.Git.GetTree(ctx, ownerName, repoName, *ref.Object.SHA, true)
 	if err != nil {
@@ -66,7 +64,7 @@ func (r *Repository) Upload(ctx context.Context, param UploadFileParam) (string,
 	entries := []*github.TreeEntry{}
 	for _, entry := range tree.Entries {
 		path := entry.GetPath()
-		if param.ReplaceIfNameExists && strings.HasPrefix(path, param.DestinationFolderPath) && strings.Contains(path, fileNameSegments[0]) {
+		if param.ReplaceIfNameExists && strings.HasPrefix(path, param.FilePathRemote) && strings.Contains(path, fileName) {
 			entry.SHA = nil
 			entries = append(entries, entry)
 		}
@@ -83,7 +81,7 @@ func (r *Repository) Upload(ctx context.Context, param UploadFileParam) (string,
 		return "", err
 	}
 
-	entries = append(entries, &github.TreeEntry{Path: github.String(filePathRemote), Type: github.String("blob"), SHA: blob.SHA, Mode: github.String("100644")})
+	entries = append(entries, &github.TreeEntry{Path: github.String(param.FilePathRemote), Type: github.String("blob"), SHA: blob.SHA, Mode: github.String("100644")})
 	newTree, _, err := r.github.Git.CreateTree(ctx, ownerName, repoName, *ref.Object.SHA, entries)
 	if err != nil {
 		return "", err
@@ -96,7 +94,7 @@ func (r *Repository) Upload(ctx context.Context, param UploadFileParam) (string,
 
 	parent.Commit.SHA = parent.SHA
 	date := time.Now()
-	commitMessage := "Add " + filePathRemote
+	commitMessage := "Add " + fileName
 	author := &github.CommitAuthor{Date: &github.Timestamp{date}, Name: &authorName, Email: &authorEmail}
 	commit := &github.Commit{Author: author, Message: &commitMessage, Tree: newTree, Parents: []*github.Commit{parent.Commit}}
 	newCommit, _, err := r.github.Git.CreateCommit(ctx, ownerName, repoName, commit)
@@ -111,5 +109,5 @@ func (r *Repository) Upload(ctx context.Context, param UploadFileParam) (string,
 		return "", err
 	}
 
-	return fmt.Sprintf(githubRawURLFormat, ownerName, repoName, commitBranch, filePathRemote), nil
+	return fmt.Sprintf(githubRawURLFormat, ownerName, repoName, commitBranch, param.FilePathRemote), nil
 }

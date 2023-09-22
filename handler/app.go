@@ -174,7 +174,7 @@ func (h *Handler) HandleUpdateApp(ctx *gin.Context) {
 		return
 	}
 
-	err = h.usecase.UpdateApp(ctx, usecase.App(request))
+	err = h.usecase.UpdateApp(ctx, request.convertToUsecase())
 	if err != nil {
 		log.Error(err, "h.usecase.UpdateApp() got error - HandleUpdateApp", request)
 		WriteJson(ctx, nil, err)
@@ -215,7 +215,7 @@ func (h *Handler) HandleUpdateAppIcon(ctx *gin.Context) {
 	}
 
 	file.Filename = "app_icon." + filenameSegments[len(filenameSegments)-1]
-	dst := assets.GenerateAssetPath(file.Filename)
+	dst := assets.GenerateWorkFilePath(file.Filename)
 	ctx.SaveUploadedFile(file, dst)
 
 	err = h.usecase.UpdateAppIcon(ctx, appID, file.Filename, dst)

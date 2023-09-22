@@ -1,9 +1,12 @@
 package usecase
 
 import (
+	"database/sql"
 	"dynapgen/constants"
 	"dynapgen/repository/db"
 	"dynapgen/repository/redis"
+	"dynapgen/util/log"
+	"encoding/json"
 	"errors"
 	"time"
 )
@@ -16,12 +19,28 @@ const (
 
 var (
 	errorAppNotFound = errors.New("app not found")
+
+	// will be removed
+	// idea: add new column on templates (app_string jsonb, app_style jsonb)
+	// then query by template ID and voila!
+	templateIDStringMap = map[string]map[string]string{
+		"template1": map[string]string{
+			"str1": "test",
+		},
+	}
+
+	templateIDStyleMap = map[string]map[string]string{
+		"template1": map[string]string{
+			"color1": "test",
+		},
+	}
 )
 
 type NewAppRequest struct {
 	AppName     string
 	PackageName string
 	OwnerID     string
+	TemplateID  string
 }
 
 type NewAppAdsRequest struct {
@@ -36,31 +55,28 @@ type NewAppAdsRequest struct {
 }
 
 type App struct {
-	Total                      int         `json:"-"`
-	ID                         string      `json:"id"`
-	OwnerID                    string      `json:"owner_id"`
-	Name                       string      `json:"name"`
-	PackageName                string      `json:"package_name"`
-	TemplateID                 string      `json:"template_id"`
-	AdmobAppID                 string      `json:"admob_app_id"`
-	AppLovinSDKKey             string      `json:"app_lovin_sdk_key"`
-	Version                    int         `json:"version"`
-	VersionCode                string      `json:"version_code"`
-	IconURL                    string      `json:"icon_url"`
-	PrivacyPolicyLink          string      `json:"privacy_policy_link"`
-	Strings                    interface{} `json:"strings"`
-	ColorPrimary               string      `json:"color_primary"`
-	ColorSecondary             string      `json:"color_secondary"`
-	ColorOnPrimary             string      `json:"color_on_primary"`
-	ColorOnSecondary           string      `json:"color_on_secondary"`
-	EnableOpen                 bool        `json:"enable_open"`
-	EnableBanner               bool        `json:"enable_banner"`
-	EnableInterstitial         bool        `json:"enable_interstitial"`
-	EnableNative               bool        `json:"enable_native"`
-	EnableReward               bool        `json:"enable_reward"`
-	InterstitialIntervalSecond int         `json:"interstitial_interval_second"`
-	CreatedAt                  time.Time   `json:"created_at"`
-	UpdatedAt                  *time.Time  `json:"updated_at"`
+	Total                      int               `json:"-"`
+	ID                         string            `json:"id"`
+	OwnerID                    string            `json:"owner_id"`
+	Name                       string            `json:"name"`
+	PackageName                string            `json:"package_name"`
+	TemplateID                 string            `json:"template_id"`
+	AdmobAppID                 string            `json:"admob_app_id"`
+	AppLovinSDKKey             string            `json:"app_lovin_sdk_key"`
+	Version                    int               `json:"version"`
+	VersionCode                string            `json:"version_code"`
+	IconURL                    string            `json:"icon_url"`
+	PrivacyPolicyLink          string            `json:"privacy_policy_link"`
+	Strings                    map[string]string `json:"strings"`
+	Styles                     map[string]string `json:"styles"`
+	EnableOpen                 bool              `json:"enable_open"`
+	EnableBanner               bool              `json:"enable_banner"`
+	EnableInterstitial         bool              `json:"enable_interstitial"`
+	EnableNative               bool              `json:"enable_native"`
+	EnableReward               bool              `json:"enable_reward"`
+	InterstitialIntervalSecond int               `json:"interstitial_interval_second"`
+	CreatedAt                  time.Time         `json:"created_at"`
+	UpdatedAt                  *time.Time        `json:"updated_at"`
 }
 
 type AppAds struct {
@@ -78,22 +94,12 @@ type AppAds struct {
 }
 
 type AppFull struct {
-	ID                string       `json:"id"`
-	OwnerID           string       `json:"owner_id"`
-	Name              string       `json:"name"`
-	PackageName       string       `json:"package_name"`
-	TemplateID        string       `json:"template_id"`
-	AdmobAppID        string       `json:"admob_app_id"`
-	AppLovinSDKKey    string       `json:"app_lovin_sdk_key"`
-	Version           int          `json:"version"`
-	VersionCode       string       `json:"version_code"`
-	IconURL           string       `json:"icon_url"`
-	PrivacyPolicyLink string       `json:"privacy_policy_link"`
-	AppConfig         AppConfig    `json:"app_config"`
-	AdsConfig         AdsConfig    `json:"ads_config"`
-	Content           []AppContent `json:"content"`
-	CreatedAt         time.Time    `json:"created_at"`
-	UpdatedAt         *time.Time   `json:"updated_at"`
+	ID             string       `json:"id"`
+	Name           string       `json:"name"`
+	AdmobAppID     string       `json:"admob_app_id"`
+	AppLovinSDKKey string       `json:"app_lovin_sdk_key"`
+	AdsConfig      AdsConfig    `json:"ads_config"`
+	Content        []AppContent `json:"content"`
 }
 
 type AdsConfig struct {
@@ -179,20 +185,6 @@ func (app *App) updateWith(input App) {
 		app.PrivacyPolicyLink = input.PrivacyPolicyLink
 	}
 
-	// style settings
-	if input.ColorPrimary != "" {
-		app.ColorPrimary = input.ColorPrimary
-	}
-	if input.ColorSecondary != "" {
-		app.ColorSecondary = input.ColorSecondary
-	}
-	if input.ColorOnPrimary != "" {
-		app.ColorOnPrimary = input.ColorOnPrimary
-	}
-	if input.ColorOnSecondary != "" {
-		app.ColorOnSecondary = input.ColorOnSecondary
-	}
-
 	// string settings
 	if input.Strings != nil {
 		app.Strings = input.Strings
@@ -216,29 +208,17 @@ func (app *App) updateWith(input App) {
 	if input.InterstitialIntervalSecond != app.InterstitialIntervalSecond {
 		app.InterstitialIntervalSecond = input.InterstitialIntervalSecond
 	}
+
+	timeNow := time.Now()
+	app.UpdatedAt = &timeNow
 }
 
 func buildAppFull(app db.App, appAds []db.AppAds, appContents []db.AppContent) AppFull {
 	result := AppFull{
-		ID:                app.ID,
-		OwnerID:           app.OwnerID,
-		Name:              app.Name,
-		PackageName:       app.PackageName,
-		TemplateID:        app.TemplateID,
-		AdmobAppID:        app.AdmobAppID,
-		AppLovinSDKKey:    app.AppLovinSDKKey,
-		Version:           app.Version,
-		VersionCode:       app.VersionCode,
-		IconURL:           app.IconURL,
-		PrivacyPolicyLink: app.PrivacyPolicyLink,
-		AppConfig: AppConfig{
-			Strings: app.Strings,
-			Style: AppStyle{
-				ColorPrimary:   app.ColorPrimary,
-				ColorSecondary: app.ColorSecondary,
-				ColorOnPrimary: app.ColorOnPrimary,
-			},
-		},
+		ID:             app.ID,
+		Name:           app.Name,
+		AdmobAppID:     app.AdmobAppID,
+		AppLovinSDKKey: app.AppLovinSDKKey,
 		AdsConfig: AdsConfig{
 			EnableOpen:                 app.EnableOpen,
 			EnableBanner:               app.EnableBanner,
@@ -247,8 +227,6 @@ func buildAppFull(app db.App, appAds []db.AppAds, appContents []db.AppContent) A
 			EnableReward:               app.EnableReward,
 			InterstitialIntervalSecond: app.InterstitialIntervalSecond,
 		},
-		CreatedAt: app.CreatedAt,
-		UpdatedAt: app.UpdatedAt,
 	}
 
 	ads := make([]AppAd, len(appAds))
@@ -275,22 +253,10 @@ func buildAppFull(app db.App, appAds []db.AppAds, appContents []db.AppContent) A
 
 func convertAppFullFromCache(cached redis.AppFull) AppFull {
 	result := AppFull{
-		ID:                cached.ID,
-		OwnerID:           cached.OwnerID,
-		Name:              cached.Name,
-		PackageName:       cached.PackageName,
-		TemplateID:        cached.TemplateID,
-		AdmobAppID:        cached.AdmobAppID,
-		AppLovinSDKKey:    cached.AppLovinSDKKey,
-		Version:           cached.Version,
-		VersionCode:       cached.VersionCode,
-		IconURL:           cached.IconURL,
-		PrivacyPolicyLink: cached.PrivacyPolicyLink,
-		AppConfig: AppConfig{
-			Strings: cached.AppConfig.Strings,
-			Style:   AppStyle(cached.AppConfig.Style),
-		},
-		CreatedAt: cached.CreatedAt,
+		ID:             cached.ID,
+		Name:           cached.Name,
+		AdmobAppID:     cached.AdmobAppID,
+		AppLovinSDKKey: cached.AppLovinSDKKey,
 	}
 
 	ads := make([]AppAd, len(cached.AdsConfig.Ads))
@@ -313,22 +279,10 @@ func convertAppFullFromCache(cached redis.AppFull) AppFull {
 
 func convertAppFullToCache(app AppFull) redis.AppFull {
 	result := redis.AppFull{
-		ID:                app.ID,
-		OwnerID:           app.OwnerID,
-		Name:              app.Name,
-		PackageName:       app.PackageName,
-		TemplateID:        app.TemplateID,
-		AdmobAppID:        app.AdmobAppID,
-		AppLovinSDKKey:    app.AppLovinSDKKey,
-		Version:           app.Version,
-		VersionCode:       app.VersionCode,
-		IconURL:           app.IconURL,
-		PrivacyPolicyLink: app.PrivacyPolicyLink,
-		AppConfig: redis.AppConfig{
-			Strings: app.AppConfig.Strings,
-			Style:   redis.AppStyle(app.AppConfig.Style),
-		},
-		CreatedAt: app.CreatedAt,
+		ID:             app.ID,
+		Name:           app.Name,
+		AdmobAppID:     app.AdmobAppID,
+		AppLovinSDKKey: app.AppLovinSDKKey,
 	}
 
 	ads := make([]redis.AppAd, len(app.AdsConfig.Ads))
@@ -344,6 +298,92 @@ func convertAppFullToCache(app AppFull) redis.AppFull {
 		EnableReward:               app.AdsConfig.EnableReward,
 		InterstitialIntervalSecond: app.AdsConfig.InterstitialIntervalSecond,
 		Ads:                        ads,
+	}
+
+	return result
+}
+
+func convertAppFromDB(app db.App) App {
+	var strings, styles map[string]string
+	err := json.Unmarshal([]byte(app.Strings), &strings)
+	if err != nil {
+		log.Error(err, "error unmarshalling app string", string(app.Strings))
+	}
+
+	err = json.Unmarshal([]byte(app.Styles), &styles)
+	if err != nil {
+		log.Error(err, "error unmarshalling app style", string(app.Styles))
+	}
+
+	result := App{
+		ID:                         app.ID,
+		OwnerID:                    app.OwnerID,
+		Name:                       app.Name,
+		PackageName:                app.PackageName,
+		TemplateID:                 app.TemplateID,
+		AdmobAppID:                 app.AdmobAppID,
+		AppLovinSDKKey:             app.AppLovinSDKKey,
+		Version:                    app.Version,
+		VersionCode:                app.VersionCode,
+		IconURL:                    app.IconURL,
+		PrivacyPolicyLink:          app.PrivacyPolicyLink,
+		Strings:                    strings,
+		Styles:                     styles,
+		EnableOpen:                 app.EnableOpen,
+		EnableBanner:               app.EnableBanner,
+		EnableInterstitial:         app.EnableInterstitial,
+		EnableNative:               app.EnableNative,
+		EnableReward:               app.EnableReward,
+		InterstitialIntervalSecond: app.InterstitialIntervalSecond,
+		CreatedAt:                  app.CreatedAt,
+	}
+
+	if app.UpdatedAt.Valid {
+		result.UpdatedAt = &app.UpdatedAt.Time
+	}
+
+	return result
+}
+
+func (app *App) convertAppToDB() db.App {
+	stringsByte, err := json.Marshal(app.Strings)
+	if err != nil {
+		log.Error(err, "error marshalling app string", app.Strings)
+	}
+
+	stylesByte, err := json.Marshal(app.Styles)
+	if err != nil {
+		log.Error(err, "error marshalling app styles", app.Styles)
+	}
+
+	result := db.App{
+		ID:                         app.ID,
+		OwnerID:                    app.OwnerID,
+		Name:                       app.Name,
+		PackageName:                app.PackageName,
+		TemplateID:                 app.TemplateID,
+		AdmobAppID:                 app.AdmobAppID,
+		AppLovinSDKKey:             app.AppLovinSDKKey,
+		Version:                    app.Version,
+		VersionCode:                app.VersionCode,
+		IconURL:                    app.IconURL,
+		PrivacyPolicyLink:          app.PrivacyPolicyLink,
+		Strings:                    string(stringsByte),
+		Styles:                     string(stylesByte),
+		EnableOpen:                 app.EnableOpen,
+		EnableBanner:               app.EnableBanner,
+		EnableInterstitial:         app.EnableInterstitial,
+		EnableNative:               app.EnableNative,
+		EnableReward:               app.EnableReward,
+		InterstitialIntervalSecond: app.InterstitialIntervalSecond,
+		CreatedAt:                  app.CreatedAt,
+	}
+
+	if app.UpdatedAt != nil {
+		result.UpdatedAt = sql.NullTime{
+			Valid: true,
+			Time:  *app.UpdatedAt,
+		}
 	}
 
 	return result
