@@ -68,7 +68,7 @@ func (uc *Usecase) GetAppAds(ctx context.Context, appID string) ([]AppAds, error
 func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error) {
 	cachedApp, err := uc.cache.GetAppFullByID(ctx, appID)
 	if err != nil {
-		log.Error(err, "uc.cache.GetUserRoleIDMapByUserID() got error - GetAppFull", map[string]interface{}{"app_id": appID})
+		log.Error(err, "uc.cache.GetAppFullByID() got error - GetAppFull", map[string]interface{}{"app_id": appID})
 	}
 	if cachedApp.ID != "" {
 		return convertAppFullFromCache(cachedApp), nil

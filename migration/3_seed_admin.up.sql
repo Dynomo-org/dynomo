@@ -1,0 +1,2 @@
+INSERT INTO users (id, full_name, email, "password") VALUES('ck8hv1foh5gd6bsv59m0', 'Ibrahimsyah Zairussalam', 'ibra.himsyah10@gmail.com', '$2a$10$b7RsGnmRo3KlhMOsgTka2eLDU4QjnFVnBJStqXe4yNXAJCBcld2c2') ON CONFLICT(id) DO NOTHING;
+INSERT INTO user_roles (user_id, role_id) VALUES('ck8hv1foh5gd6bsv59m0', 'ck8etknoh5h12z71t4n3') ON CONFLICT(user_id, role_id) DO UPDATE SET role_id = 'ck8etknoh5h12z71t4n3';
