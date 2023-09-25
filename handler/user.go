@@ -3,16 +3,25 @@ package handler
 import (
 	"dynapgen/constants"
 	"dynapgen/usecase"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+)
+
+var (
+	errorIncompleteInput = errors.New("incomplete input")
 )
 
 func (h *Handler) HandleGetUserInfo(ctx *gin.Context) {
 	userID := ctx.GetString(constants.ContextKeyUserID)
 	result, err := h.usecase.GetUserInfo(ctx, userID)
 	if err != nil {
-		WriteJson(ctx, nil, err, http.StatusInternalServerError)
+		statusCode := http.StatusInternalServerError
+		if err == usecase.ErrorUserNotFound {
+			statusCode = http.StatusBadRequest
+		}
+		WriteJson(ctx, nil, err, statusCode)
 		return
 	}
 
@@ -23,6 +32,11 @@ func (h *Handler) HandleLoginUser(ctx *gin.Context) {
 	var request LoginUserRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		WriteJson(ctx, nil, err, http.StatusBadRequest)
+		return
+	}
+
+	if request.Email == "" || request.Password == "" {
+		WriteJson(ctx, nil, errorIncompleteInput, http.StatusBadRequest)
 		return
 	}
 
@@ -47,6 +61,11 @@ func (h *Handler) HandleRegisterUser(ctx *gin.Context) {
 	var request RegisterUserRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		WriteJson(ctx, nil, err, http.StatusBadRequest)
+		return
+	}
+
+	if request.FullName == "" || request.Email == "" || request.Password == "" {
+		WriteJson(ctx, nil, errorIncompleteInput, http.StatusBadRequest)
 		return
 	}
 

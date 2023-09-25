@@ -1,0 +1,1 @@
+INSERT INTO roles (id, name) values ('ck8etknoh5h12z71t4n3', 'admin'), ('h1b527xw41j5238xma8s', 'user') ON CONFLICT(id) DO NOTHING;
