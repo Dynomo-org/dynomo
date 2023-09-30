@@ -29,8 +29,8 @@ type App struct {
 	TemplateID                 string            `json:"template_id"`
 	AdmobAppID                 string            `json:"admob_app_id"`
 	AppLovinSDKKey             string            `json:"app_lovin_sdk_key"`
-	Version                    int               `json:"version"`
-	VersionCode                string            `json:"version_code"`
+	Version                    string            `json:"version"`
+	VersionCode                int               `json:"version_code"`
 	IconURL                    string            `json:"icon_url"`
 	PrivacyPolicyLink          string            `json:"privacy_policy_link"`
 	Strings                    map[string]string `json:"strings"`
