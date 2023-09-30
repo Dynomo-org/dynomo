@@ -23,6 +23,7 @@ type NewAppAdsRequest struct {
 }
 
 type App struct {
+	ID                         string            `json:"id"`
 	OwnerID                    string            `json:"owner_id"`
 	Name                       string            `json:"name"`
 	PackageName                string            `json:"package_name"`
@@ -45,6 +46,7 @@ type App struct {
 
 func (a *App) convertToUsecase() usecase.App {
 	return usecase.App{
+		ID:                         a.ID,
 		OwnerID:                    a.OwnerID,
 		Name:                       a.Name,
 		PackageName:                a.PackageName,
