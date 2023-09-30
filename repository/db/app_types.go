@@ -14,12 +14,12 @@ type App struct {
 	TemplateID                 string       `db:"template_id"`
 	AdmobAppID                 string       `db:"admob_app_id"`
 	AppLovinSDKKey             string       `db:"app_lovin_sdk_key"`
-	Version                    int          `db:"version"`
-	VersionCode                string       `db:"version_code"`
+	Version                    string       `db:"version_name"`
+	VersionCode                int          `db:"version_code"`
 	IconURL                    string       `db:"icon_url"`
 	PrivacyPolicyLink          string       `db:"privacy_policy_link"`
-	Strings                    string       `db:"strings"`   // jsonb type
-	Styles                     string       `db:"app_style"` // jsonb type
+	Strings                    string       `db:"app_strings"` // jsonb type
+	Styles                     string       `db:"app_styles"`  // jsonb type
 	EnableOpen                 bool         `db:"enable_open"`
 	EnableBanner               bool         `db:"enable_banner"`
 	EnableInterstitial         bool         `db:"enable_interstitial"`

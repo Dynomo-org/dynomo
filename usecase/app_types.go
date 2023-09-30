@@ -24,13 +24,13 @@ var (
 	// idea: add new column on templates (app_string jsonb, app_style jsonb)
 	// then query by template ID and voila!
 	templateIDStringMap = map[string]map[string]string{
-		"template1": map[string]string{
+		"template1": {
 			"str1": "test",
 		},
 	}
 
 	templateIDStyleMap = map[string]map[string]string{
-		"template1": map[string]string{
+		"template1": {
 			"color1": "test",
 		},
 	}
@@ -63,8 +63,8 @@ type App struct {
 	TemplateID                 string            `json:"template_id"`
 	AdmobAppID                 string            `json:"admob_app_id"`
 	AppLovinSDKKey             string            `json:"app_lovin_sdk_key"`
-	Version                    int               `json:"version"`
-	VersionCode                string            `json:"version_code"`
+	Version                    string            `json:"version"`
+	VersionCode                int               `json:"version_code"`
 	IconURL                    string            `json:"icon_url"`
 	PrivacyPolicyLink          string            `json:"privacy_policy_link"`
 	Strings                    map[string]string `json:"strings"`
@@ -172,11 +172,11 @@ func (app *App) updateWith(input App) {
 	if input.PackageName != "" {
 		app.PackageName = input.PackageName
 	}
-	if input.VersionCode != "" {
-		app.VersionCode = input.VersionCode
-	}
-	if input.Version != 0 {
+	if input.Version != "" {
 		app.Version = input.Version
+	}
+	if input.VersionCode != 0 {
+		app.VersionCode = input.VersionCode
 	}
 	if input.IconURL != "" {
 		app.IconURL = input.IconURL

@@ -33,6 +33,7 @@ func (h *Handler) HandleCreateNewApp(ctx *gin.Context) {
 		AppName:     request.AppName,
 		PackageName: request.PackageName,
 		OwnerID:     ownerID,
+		TemplateID:  "template1",
 	}
 	err = h.usecase.NewApp(ctx, param)
 	if err != nil {
