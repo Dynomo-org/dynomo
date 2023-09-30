@@ -196,6 +196,7 @@ func (uc *Usecase) UpdateApp(ctx context.Context, request App) error {
 	app, err := uc.GetApp(ctx, request.ID)
 	if err != nil {
 		log.Error(err, "uc.Get() got error - UpdateApp", app)
+		return errorAppNotFound
 	}
 
 	app.updateWith(request)

@@ -1,12 +1,12 @@
 package db
 
 const (
-	queryDeleteApp             = `delete from apps where app_id = $1`
-	queryGetAppsByUserID       = `select count(*) over() as total, * from apps where owner_id = $1`
-	queryGetApp                = `select * from apps where id = $1`
-	queryGetAppString          = `select * from app_strings where app_id = $1`
-	queryGetAppStyle           = `select * from app_styles where app_id = $1`
-	queryGetAppContentsByAppID = `select id, title, description, content from app_contents where app_id = $1`
+	queryDeleteApp             = `DELETE FROM apps WHERE app_id = $1`
+	queryGetAppsByUserID       = `SELECT count(*) over() as total, * FROM apps WHERE owner_id = $1 ORDER BY created_at DESC`
+	queryGetApp                = `SELECT * FROM apps WHERE id = $1`
+	queryGetAppString          = `SELECT * FROM app_strings WHERE app_id = $1`
+	queryGetAppStyle           = `SELECT * FROM app_styles WHERE app_id = $1`
+	queryGetAppContentsByAppID = `SELECT id, title, description, content FROM app_contents WHERE app_id = $1`
 	queryInsertApp             = `
 		insert into apps(
 			id,
@@ -84,17 +84,14 @@ const (
 			owner_id = :owner_id,
 			name = :name,
 			package_name = :package_name,
-			type = :type,
 			admob_app_id = :admob_app_id,
 			app_lovin_sdk_key = :app_lovin_sdk_key,
-			version = :version,
+			version_name = :version_name,
 			version_code = :version_code,
 			icon_url = :icon_url,
 			privacy_policy_link = :privacy_policy_link,
-			strings = :strings,
-			color_primary = :color_primary,
-			color_primary_variant = :color_primary_variant,
-			color_on_primary = :color_on_primary,
+			app_strings = :app_strings,
+			app_styles = :app_styles,
 			enable_open = :enable_open,
 			enable_banner = :enable_banner,
 			enable_interstitial = :enable_interstitial,
@@ -103,6 +100,6 @@ const (
 			interstitial_interval_second = :interstitial_interval_second,
 			created_at = :created_at,
 			updated_at = :updated_at
-		 where id = :id
+		where id = :id
 	`
 )
