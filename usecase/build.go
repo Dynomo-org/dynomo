@@ -2,14 +2,13 @@ package usecase
 
 import (
 	"context"
-	"dynapgen/repository/github"
+	"dynapgen/repository/db"
 	"dynapgen/repository/nsq"
 	"dynapgen/repository/redis"
-	"dynapgen/util/cmd"
-	"dynapgen/util/file"
 	"dynapgen/util/log"
-	"fmt"
 	"strings"
+
+	"github.com/rs/xid"
 )
 
 func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
@@ -33,25 +32,16 @@ func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 		return nil
 	}
 
-	keystoreUrl, err := uc.github.Upload(ctx, github.UploadFileParam{
-		FilePathLocal:       param.KeystorePath,
-		FilePathRemote:      file.GenerateUniqueGithubFilePath(file.GithubFolderKeystore, file.GetFilenameFromPath(param.KeystorePath)),
-		ReplaceIfNameExists: true,
-	})
+	keystore, err := uc.db.GetKeystoreByID(ctx, param.KeystoreID)
 	if err != nil {
-		log.Error(err, "uc.githb.Upload() got error - BuildApp", param)
+		log.Error(err, "error getting keystore - BuildApp", param)
 		return err
 	}
 
-	// clean up local file
-	cleanupCommand := fmt.Sprintf("rm %s", param.KeystorePath)
-	if err := cmd.ExecCommandWithContext(ctx, cleanupCommand); err != nil {
-		log.Error(err, "error cleaning up updated app icon - BuildApp", cleanupCommand)
-		return err
-	}
-
+	// generate build ID
+	buildID := xid.New().String()
 	if err = uc.cache.SetBuildAppStatus(ctx, redis.UpdateBuildStatusParam{
-		AppID: param.AppID,
+		BuildID: buildID,
 		BuildStatus: redis.BuildStatus{
 			Status: redis.BuildStatusEnumPending,
 		},
@@ -61,13 +51,13 @@ func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 	}
 
 	buildParam := nsq.BuildAppParam{
-		AppID:          param.AppID,
+		BuildID:        buildID,
 		AppName:        app.Name,
-		AppVersionCode: param.VersionCode,
-		AppVersionName: param.VersionName,
+		AppVersionCode: app.VersionCode,
+		AppVersionName: app.Version,
 		TemplateType:   template.Type,
 		TemplateName:   getRepositoryName(template.RepositoryURL),
-		KeystoreUrl:    keystoreUrl,
+		KeystoreUrl:    keystore.DownloadURL,
 	}
 
 	if err = uc.mq.PublishBuildApp(ctx, buildParam); err != nil {
@@ -93,14 +83,28 @@ func (uc *Usecase) GetBuildAppStatus(ctx context.Context, appID string) (BuildSt
 }
 
 func (uc *Usecase) SetBuildAppStatus(ctx context.Context, param UpdateBuildStatusParam) error {
-	return uc.cache.SetBuildAppStatus(ctx, redis.UpdateBuildStatusParam{
-		AppID: param.AppID,
+	if err := uc.cache.SetBuildAppStatus(ctx, redis.UpdateBuildStatusParam{
+		BuildID: param.BuildID,
 		BuildStatus: redis.BuildStatus{
 			Status:       redis.BuildStatusEnum(param.BuildStatus.Status),
 			URL:          param.BuildStatus.URL,
 			ErrorMessage: param.BuildStatus.ErrorMessage,
 		},
-	})
+	}); err != nil {
+		log.Error(err, "error updating build status to cache - SetBuildAppStatus", param)
+		return err
+	}
+
+	if err := uc.db.UpsertAppArtifact(ctx, db.AppArtifact{
+		ID:          param.BuildID,
+		BuildStatus: int(param.BuildStatus.Status),
+		DownloadURL: param.BuildStatus.URL,
+	}); err != nil {
+		log.Error(err, "error updating build status to db - SetBuildAppStatus", param)
+		return err
+	}
+
+	return nil
 }
 
 func getRepositoryName(url string) string {

@@ -1,1 +1,1 @@
-DELETE FROM roles WHERE id IN ("ck8etknoh5h12z71t4n3", "h1b527xw41j5238xma8s");
+DELETE FROM roles WHERE id IN ('ck8etknoh5h12z71t4n3', 'h1b527xw41j5238xma8s');

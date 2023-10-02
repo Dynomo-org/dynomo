@@ -1,7 +1,7 @@
 package handler
 
 type GenerateStoreParam struct {
-	AppID         string `json:"app_id"`
+	KeystoreName  string `json:"keystore_name"`
 	FullName      string `json:"full_name"`
 	Organization  string `json:"organization,omitempty"`
 	Country       string `json:"country"`

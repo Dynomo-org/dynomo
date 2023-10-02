@@ -10,7 +10,7 @@ const (
 )
 
 type UpdateBuildStatusParam struct {
-	AppID string
+	BuildID string
 	BuildStatus
 }
 
