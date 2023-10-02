@@ -11,11 +11,10 @@ import (
 )
 
 const (
-	TTL1Day      = 24 * 60 * 60 * time.Second
-	TTL15Minutes = 15 * 60 * time.Second
+	TTL1Day = 24 * 60 * 60 * time.Second
 
 	keyApp            = "app_%s"
-	keyBuildAppStatus = "app_%s_build_app"
+	keyBuildAppStatus = "build_app_%s"
 )
 
 var (
@@ -82,11 +81,11 @@ func (r *Repository) InsertAppFull(ctx context.Context, app AppFull) error {
 }
 
 func (r *Repository) SetBuildAppStatus(ctx context.Context, param UpdateBuildStatusParam) error {
-	key := fmt.Sprintf(keyBuildAppStatus, param.AppID)
+	key := fmt.Sprintf(keyBuildAppStatus, param.BuildID)
 	marshalled, err := json.Marshal(param.BuildStatus)
 	if err != nil {
 		return err
 	}
 
-	return r.redis.SetEx(ctx, key, string(marshalled), TTL15Minutes).Err()
+	return r.redis.SetEx(ctx, key, string(marshalled), TTL1Day).Err()
 }

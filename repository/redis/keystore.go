@@ -5,16 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 const (
 	fieldKeystore = "keystore"
-	keystoreTTL   = 5 * 60 * time.Second
 
-	keyBuildKeystoreStatus = "app_%s_build_keystore"
+	keyBuildKeystoreStatus = "build_keystore_%s"
 )
 
 var (
@@ -55,15 +53,15 @@ func (r *Repository) InsertKeystoreBuildStatus(ctx context.Context, appID string
 		return err
 	}
 
-	return r.HSetEX(ctx, appID, fieldKeystore, string(marshalled), keystoreTTL)
+	return r.HSetEX(ctx, appID, fieldKeystore, string(marshalled), TTL1Day)
 }
 
 func (r *Repository) SetBuildKeystoreStatus(ctx context.Context, param UpdateBuildStatusParam) error {
-	key := fmt.Sprintf(keyBuildKeystoreStatus, param.AppID)
+	key := fmt.Sprintf(keyBuildKeystoreStatus, param.BuildID)
 	marshalled, err := json.Marshal(param.BuildStatus)
 	if err != nil {
 		return err
 	}
 
-	return r.redis.SetEx(ctx, key, string(marshalled), TTL15Minutes).Err()
+	return r.redis.SetEx(ctx, key, string(marshalled), TTL1Day).Err()
 }

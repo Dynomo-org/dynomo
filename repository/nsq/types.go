@@ -8,7 +8,7 @@ type AppStyle struct {
 }
 
 type BuildAppParam struct {
-	AppID          string   `json:"app_id,omitempty"`
+	BuildID        string   `json:"build_id,omitempty"`
 	AppName        string   `json:"app_name,omitempty"`
 	AppVersionCode int      `json:"app_version_code,omitempty"`
 	AppVersionName string   `json:"app_version_name,omitempty"`
@@ -21,7 +21,7 @@ type BuildAppParam struct {
 }
 
 type BuildKeystoreParam struct {
-	AppID         string `json:"app_id,omitempty"`
+	BuildID       string `json:"build_id,omitempty"`
 	FullName      string `json:"full_name,omitempty"`
 	Organization  string `json:"organization,omitempty"`
 	Country       string `json:"country,omitempty"`

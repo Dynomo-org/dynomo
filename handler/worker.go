@@ -2,19 +2,24 @@ package handler
 
 import (
 	"dynapgen/usecase"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
+var (
+	errorBuildIDEmpty = errors.New("build id is empty")
+)
+
 func (h *Handler) HandleGetBuildAppStatus(ctx *gin.Context) {
-	appID := ctx.Query("app_id")
-	if appID == "" {
-		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
+	buildID := ctx.Query("build_id")
+	if buildID == "" {
+		WriteJson(ctx, nil, errorBuildIDEmpty, http.StatusBadRequest)
 		return
 	}
 
-	result, err := h.usecase.GetBuildAppStatus(ctx, appID)
+	result, err := h.usecase.GetBuildAppStatus(ctx, buildID)
 	if err != nil {
 		WriteJson(ctx, nil, err)
 		return
@@ -24,13 +29,13 @@ func (h *Handler) HandleGetBuildAppStatus(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleGetBuildKeystoreStatus(ctx *gin.Context) {
-	appID := ctx.Query("app_id")
-	if appID == "" {
-		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
+	buildID := ctx.Query("build_id")
+	if buildID == "" {
+		WriteJson(ctx, nil, errorBuildIDEmpty, http.StatusBadRequest)
 		return
 	}
 
-	result, err := h.usecase.GetBuildKeystoreStatus(ctx, appID)
+	result, err := h.usecase.GetBuildKeystoreStatus(ctx, buildID)
 	if err != nil {
 		WriteJson(ctx, nil, err)
 		return
@@ -40,9 +45,9 @@ func (h *Handler) HandleGetBuildKeystoreStatus(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleUpdateBuildAppStatus(ctx *gin.Context) {
-	appID := ctx.Query("app_id")
-	if appID == "" {
-		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
+	buildID := ctx.Query("build_id")
+	if buildID == "" {
+		WriteJson(ctx, nil, errorBuildIDEmpty, http.StatusBadRequest)
 		return
 	}
 
@@ -54,7 +59,7 @@ func (h *Handler) HandleUpdateBuildAppStatus(ctx *gin.Context) {
 	}
 
 	if err = h.usecase.SetBuildAppStatus(ctx, usecase.UpdateBuildStatusParam{
-		AppID: appID,
+		BuildID: buildID,
 		BuildStatus: usecase.BuildStatus{
 			Status:       usecase.BuildStatusEnum(body.Status),
 			URL:          body.URL,
@@ -69,9 +74,9 @@ func (h *Handler) HandleUpdateBuildAppStatus(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleUpdateBuildKeystoreStatus(ctx *gin.Context) {
-	appID := ctx.Query("app_id")
-	if appID == "" {
-		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
+	buildID := ctx.Query("build_id")
+	if buildID == "" {
+		WriteJson(ctx, nil, errorBuildIDEmpty, http.StatusBadRequest)
 		return
 	}
 
@@ -83,7 +88,7 @@ func (h *Handler) HandleUpdateBuildKeystoreStatus(ctx *gin.Context) {
 	}
 
 	if err = h.usecase.SetBuildKeystoreStatus(ctx, usecase.UpdateBuildStatusParam{
-		AppID: appID,
+		BuildID: buildID,
 		BuildStatus: usecase.BuildStatus{
 			Status:       usecase.BuildStatusEnum(body.Status),
 			URL:          body.URL,

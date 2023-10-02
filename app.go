@@ -4,6 +4,10 @@ import (
 	"context"
 	"dynapgen/handler"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	repoDB "dynapgen/repository/db"
@@ -102,7 +106,38 @@ func main() {
 	config.AllowHeaders = []string{"Authorization", "Content-Type"}
 	r.Use(cors.New(config))
 	handler.RegisterHandler(r)
-	r.Run(":5000")
+
+	server := &http.Server{
+		Addr:    ":5000",
+		Handler: r,
+	}
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Info("Shutdown Server ...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Gracefully stop the server and its dependencies
+	if err := server.Shutdown(ctx); err != nil {
+		log.Error(err, "Server Shutdown Error")
+	}
+	nsqConn.Stop()
+
+	select {
+	case <-ctx.Done():
+		log.Info("timeout of 5 seconds.")
+	default:
+		log.Info("Server exiting")
+	}
 }
 
 // init redis with retry mechanism

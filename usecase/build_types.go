@@ -1,10 +1,8 @@
 package usecase
 
 type BuildAppParam struct {
-	AppID        string
-	VersionCode  int
-	VersionName  string
-	KeystorePath string
+	AppID      string
+	KeystoreID string
 }
 
 type BuildStatusEnum int
@@ -13,10 +11,11 @@ const (
 	BuildStatusEnumSuccess BuildStatusEnum = iota + 1
 	BuildStatusEnumFailed
 	BuildStatusEnumInProgress
+	BuildStatusEnumPending
 )
 
 type UpdateBuildStatusParam struct {
-	AppID string
+	BuildID string
 	BuildStatus
 }
 

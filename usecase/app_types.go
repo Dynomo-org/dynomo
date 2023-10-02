@@ -190,6 +190,10 @@ func (app *App) updateWith(input App) {
 		app.Strings = input.Strings
 	}
 
+	if input.Styles != nil {
+		app.Styles = input.Styles
+	}
+
 	if input.EnableOpen != app.EnableOpen {
 		app.EnableOpen = input.EnableOpen
 	}
