@@ -34,7 +34,7 @@ func (uc *Usecase) BuildKeystore(ctx context.Context, param BuildKeystoreParam) 
 		return err
 	}
 
-	encryptedMetadata, err := crypto.DecryptAES(string(marshalledMetadata))
+	encryptedMetadata, err := crypto.EncryptAES(string(marshalledMetadata))
 	if err != nil {
 		log.Error(err, "error encrypting keystore metadata", string(marshalledMetadata))
 		return err
@@ -80,13 +80,15 @@ func (uc *Usecase) BuildKeystore(ctx context.Context, param BuildKeystoreParam) 
 			mutex.Unlock()
 		}
 	}()
+	wg.Wait()
 
 	if len(errs) != 0 {
-		log.Error(nil, "error updating keystore status", map[string]interface{}{
+		err = errors.New("build keystore failed")
+		log.Error(err, "error updating keystore status", map[string]interface{}{
 			"param":  param,
 			"errors": errs,
 		})
-		return errors.New("build keystore failed")
+		return err
 	}
 
 	if err := uc.mq.PublishBuildKeystore(ctx, nsq.BuildKeystoreParam{
@@ -123,7 +125,7 @@ func (uc *Usecase) GetKeystoreList(ctx context.Context, param GetKeystoreListPar
 	keystores, err := uc.db.GetKeystoresByOwnerID(ctx, param.OwnerID)
 	if err != nil {
 		log.Error(err, "error getting keystore list", param)
-		return GetKeystoreListResponse{}, nil
+		return GetKeystoreListResponse{}, err
 	}
 
 	result := make([]Keystore, len(keystores))
@@ -172,6 +174,7 @@ func (uc *Usecase) SetBuildKeystoreStatus(ctx context.Context, param UpdateBuild
 			mutex.Unlock()
 		}
 	}()
+	wg.Wait()
 
 	if len(errs) != 0 {
 		log.Error(nil, "error updating keystore status", map[string]interface{}{
