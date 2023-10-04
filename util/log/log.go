@@ -2,6 +2,7 @@ package log
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -39,6 +40,10 @@ func Error(err error, message string, metadata ...interface{}) {
 		logTemplate += " [Metadata] %v\n"
 		fmt.Printf(logTemplate, message, err.Error(), string(payload))
 		return
+	}
+
+	if err == nil {
+		err = errors.New("")
 	}
 
 	fmt.Printf(logTemplate, message, err.Error())

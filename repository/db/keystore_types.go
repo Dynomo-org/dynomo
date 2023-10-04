@@ -11,7 +11,7 @@ type Keystore struct {
 	OwnerID     string       `db:"owner_id"`
 	Name        string       `db:"name"`
 	Alias       string       `db:"alias"`
-	Metadata    string       `db:"metadata"`
+	Metadata    string       `db:"metadata_encrypted"`
 	DownloadURL string       `db:"download_url"`
 	BuildStatus int          `db:"build_status"`
 	CreatedAt   time.Time    `db:"created_at"`

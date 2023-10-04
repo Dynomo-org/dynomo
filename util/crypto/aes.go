@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"crypto/aes"
+	"crypto/cipher"
 	"encoding/hex"
 	"errors"
 
@@ -21,15 +22,24 @@ func EncryptAES(data string) (string, error) {
 		return "", errorEmptyEncryptionKey
 	}
 
-	cipher, err := aes.NewCipher([]byte(key))
+	aes, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		return "", errorInitiatingCipher
 	}
 
-	out := make([]byte, len(data))
-	cipher.Encrypt(out, []byte(data))
+	gcm, err := cipher.NewGCM(aes)
+	if err != nil {
+		return "", err
+	}
 
-	return hex.EncodeToString(out), nil
+	nonceHex := viper.GetString("AES_NONCE_KEY")
+	nonce, err := hex.DecodeString(nonceHex)
+	if err != nil {
+		return "", err
+	}
+
+	ciphertext := gcm.Seal(nil, nonce, []byte(data), nil)
+	return hex.EncodeToString(ciphertext), nil
 }
 
 // Decrypt the given encrypted and product the plain version as string
@@ -40,13 +50,31 @@ func DecryptAES(encrypted string) (string, error) {
 		return "", errorEmptyEncryptionKey
 	}
 
-	cipher, err := aes.NewCipher([]byte(key))
+	decoded, err := hex.DecodeString(encrypted)
+	if err != nil {
+		return "", err
+	}
+
+	aes, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		return "", errorInitiatingCipher
 	}
 
-	out := make([]byte, len(encrypted))
-	cipher.Decrypt(out, []byte(encrypted))
+	gcm, err := cipher.NewGCM(aes)
+	if err != nil {
+		return "", err
+	}
 
-	return string(out), nil
+	nonceHex := viper.GetString("AES_NONCE_KEY")
+	nonce, err := hex.DecodeString(nonceHex)
+	if err != nil {
+		return "", err
+	}
+
+	plaintext, err := gcm.Open(nil, []byte(nonce), []byte(decoded), nil)
+	if err != nil {
+		return "", err
+	}
+
+	return string(plaintext), nil
 }
