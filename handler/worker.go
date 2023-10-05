@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mrz1836/go-sanitize"
 )
 
 var (
@@ -13,7 +14,7 @@ var (
 )
 
 func (h *Handler) HandleGetBuildAppStatus(ctx *gin.Context) {
-	buildID := ctx.Query("build_id")
+	buildID := sanitize.AlphaNumeric(ctx.Query("build_id"), false)
 	if buildID == "" {
 		WriteJson(ctx, nil, errorBuildIDEmpty, http.StatusBadRequest)
 		return
@@ -29,7 +30,7 @@ func (h *Handler) HandleGetBuildAppStatus(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleGetBuildKeystoreStatus(ctx *gin.Context) {
-	buildID := ctx.Query("build_id")
+	buildID := sanitize.AlphaNumeric(ctx.Query("build_id"), false)
 	if buildID == "" {
 		WriteJson(ctx, nil, errorBuildIDEmpty, http.StatusBadRequest)
 		return
@@ -45,7 +46,7 @@ func (h *Handler) HandleGetBuildKeystoreStatus(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleUpdateBuildAppStatus(ctx *gin.Context) {
-	buildID := ctx.Query("build_id")
+	buildID := sanitize.AlphaNumeric(ctx.Query("build_id"), false)
 	if buildID == "" {
 		WriteJson(ctx, nil, errorBuildIDEmpty, http.StatusBadRequest)
 		return
@@ -74,9 +75,8 @@ func (h *Handler) HandleUpdateBuildAppStatus(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleUpdateBuildKeystoreStatus(ctx *gin.Context) {
-	buildID := ctx.Query("build_id")
+	buildID := sanitize.AlphaNumeric(ctx.Query("build_id"), false)
 	if buildID == "" {
-		WriteJson(ctx, nil, errorBuildIDEmpty, http.StatusBadRequest)
 		return
 	}
 

@@ -36,13 +36,16 @@ func (h *Handler) HandleGenerateKeystore(ctx *gin.Context) {
 	WriteJson(ctx, nil, nil, http.StatusAccepted)
 }
 
-func (h *Handler) HandleGetAllKeystores(ctx *gin.Context) {
+func (h *Handler) HandleGetKeystores(ctx *gin.Context) {
 	userID := ctx.GetString(constants.ContextKeyUserID)
 	perPageStr := ctx.Query("per_page")
 	perPage, err := strconv.Atoi(perPageStr)
 	if err != nil {
 		perPage = defaultPerPage
 	}
+
+	statusStr := ctx.Query("build_status")
+	status, _ := strconv.Atoi(statusStr) // default to 0 if error or not provided
 
 	pageStr := ctx.Query("page")
 	page, err := strconv.Atoi(pageStr)
@@ -51,9 +54,10 @@ func (h *Handler) HandleGetAllKeystores(ctx *gin.Context) {
 	}
 
 	param := usecase.GetKeystoreListParam{
-		Page:    page,
-		PerPage: perPage,
-		OwnerID: userID,
+		Page:        page,
+		PerPage:     perPage,
+		OwnerID:     userID,
+		BuildStatus: status,
 	}
 	result, err := h.usecase.GetKeystoreList(ctx, param)
 	if err != nil {

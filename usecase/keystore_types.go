@@ -17,9 +17,10 @@ type BuildKeystoreParam struct {
 }
 
 type GetKeystoreListParam struct {
-	Page    int
-	PerPage int
-	OwnerID string
+	Page        int
+	PerPage     int
+	BuildStatus int
+	OwnerID     string
 }
 
 type GetKeystoreListResponse struct {

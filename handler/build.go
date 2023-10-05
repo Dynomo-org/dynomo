@@ -1,17 +1,12 @@
 package handler
 
 import (
+	"dynapgen/constants"
 	"dynapgen/usecase"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-)
-
-var (
-	keystoreFileTypes = map[string]struct{}{
-		"jks":      {},
-		"keystore": {},
-	}
 )
 
 func (h *Handler) HandleBuildApp(ctx *gin.Context) {
@@ -37,4 +32,40 @@ func (h *Handler) HandleBuildApp(ctx *gin.Context) {
 	}
 
 	WriteJson(ctx, nil, nil, http.StatusAccepted)
+}
+
+func (h *Handler) HandleGetBuildArtifacts(ctx *gin.Context) {
+	appID := ctx.Query("app_id")
+	userID := ctx.GetString(constants.ContextKeyUserID)
+	perPageStr := ctx.Query("per_page")
+	perPage, err := strconv.Atoi(perPageStr)
+	if err != nil {
+		perPage = defaultPerPage
+	}
+
+	pageStr := ctx.Query("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		page = defaultPage
+	}
+
+	param := usecase.GetBuildArtifactsParam{
+		Page:    page,
+		PerPage: perPage,
+		AppID:   appID,
+		OwnerID: userID,
+	}
+
+	fn := h.usecase.GetBuildArtifactsByAppID
+	if appID != "" {
+		fn = h.usecase.GetBuildArtifactsByOwnerID
+	}
+
+	result, err := fn(ctx, param)
+	if err != nil {
+		WriteJson(ctx, nil, err)
+		return
+	}
+
+	WriteJson(ctx, result, nil)
 }

@@ -107,22 +107,23 @@ func (uc *Usecase) BuildKeystore(ctx context.Context, param BuildKeystoreParam) 
 	return nil
 }
 
-func (uc *Usecase) GetBuildKeystoreStatus(ctx context.Context, appID string) (BuildStatus, error) {
+func (uc *Usecase) GetBuildKeystoreStatus(ctx context.Context, appID string) (BuildStatusResponse, error) {
 	result, err := uc.cache.GetBuildKeystoreStatus(ctx, appID)
 	if err != nil {
 		log.Error(err, "error getting build keystore status")
-		return BuildStatus{}, err
+		return BuildStatusResponse{}, err
 	}
 
-	return BuildStatus{
-		Status:       BuildStatusEnum(result.Status),
-		URL:          result.URL,
-		ErrorMessage: result.ErrorMessage,
+	return BuildStatusResponse{
+		Status: BuildStatusEnum(result.Status),
 	}, nil
 }
 
 func (uc *Usecase) GetKeystoreList(ctx context.Context, param GetKeystoreListParam) (GetKeystoreListResponse, error) {
-	keystores, err := uc.db.GetKeystoresByOwnerID(ctx, param.OwnerID)
+	keystores, err := uc.db.GetKeystoresByOwnerID(ctx, db.GetKeystoreParam{
+		OwnerID:     param.OwnerID,
+		BuildStatus: param.BuildStatus,
+	})
 	if err != nil {
 		log.Error(err, "error getting keystore list", param)
 		return GetKeystoreListResponse{}, err
@@ -160,6 +161,7 @@ func (uc *Usecase) SetBuildKeystoreStatus(ctx context.Context, param UpdateBuild
 
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		if err := uc.cache.SetBuildKeystoreStatus(ctx, redis.UpdateBuildStatusParam{
 			BuildID: param.BuildID,
 			BuildStatus: redis.BuildStatus{

@@ -1,7 +1,7 @@
 package db
 
 const (
-	queryGetKeystoreByOwnerID = `SELECT COUNT(*) OVER() AS total, * FROM keystores WHERE owner_id = $1 ORDER BY created_at DESC`
+	queryGetKeystoreByOwnerID = `SELECT COUNT(*) OVER() AS total, * FROM keystores WHERE owner_id = $1 %s ORDER BY created_at DESC`
 	queryGetKeystoreByID      = `SELECT * FROM keystores WHERE id = $1`
 	queryUpsertKeystore       = `
 		INSERT INTO keystores(
