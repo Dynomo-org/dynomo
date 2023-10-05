@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -20,12 +21,17 @@ func (r *Repository) GetKeystoreByID(ctx context.Context, id string) (Keystore, 
 	return result, nil
 }
 
-func (r *Repository) GetKeystoresByOwnerID(ctx context.Context, ownerID string) ([]Keystore, error) {
+func (r *Repository) GetKeystoresByOwnerID(ctx context.Context, param GetKeystoreParam) ([]Keystore, error) {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
 	defer cancel()
 
+	var queryClauses string
+	if param.BuildStatus != 0 {
+		queryClauses += fmt.Sprintf("AND build_status = %d", param.BuildStatus)
+	}
+
 	var result []Keystore
-	if err := r.db.SelectContext(ctx, &result, queryGetKeystoreByOwnerID, ownerID); err != nil {
+	if err := r.db.SelectContext(ctx, &result, fmt.Sprintf(queryGetKeystoreByOwnerID, queryClauses), param.OwnerID); err != nil {
 		return nil, err
 	}
 

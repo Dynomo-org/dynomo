@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+type GetKeystoreParam struct {
+	OwnerID     string
+	BuildStatus int
+}
+
 type Keystore struct {
 	Total       int          `db:"total"`
 	ID          string       `db:"id"`

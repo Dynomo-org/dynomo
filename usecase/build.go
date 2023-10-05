@@ -6,7 +6,6 @@ import (
 	"dynapgen/repository/nsq"
 	"dynapgen/repository/redis"
 	"dynapgen/util/log"
-	"strings"
 
 	"github.com/rs/xid"
 )
@@ -52,10 +51,10 @@ func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 
 	buildParam := nsq.BuildAppParam{
 		BuildID:        buildID,
+		AppID:          app.ID,
 		AppName:        app.Name,
 		AppVersionCode: app.VersionCode,
 		AppVersionName: app.Version,
-		TemplateType:   template.Type,
 		TemplateName:   getRepositoryName(template.RepositoryURL),
 		KeystoreUrl:    keystore.DownloadURL,
 	}
@@ -66,6 +65,36 @@ func (uc *Usecase) BuildApp(ctx context.Context, param BuildAppParam) error {
 	}
 
 	return nil
+}
+
+func (uc *Usecase) GetBuildArtifactsByAppID(ctx context.Context, param GetBuildArtifactsParam) (GetBuildArtifactsResponse, error) {
+	artifacts, err := uc.db.GetAppArtifactsByAppID(ctx, param.AppID)
+	if err != nil {
+		log.Error(err, "error getting build artifacts by app ID", param)
+		return GetBuildArtifactsResponse{}, err
+	}
+
+	result := make([]BuildArtifactInfo, len(artifacts))
+	for index, artifact := range artifacts {
+		result[index] = convertBuildArtifactInfoFromDB(artifact)
+	}
+
+	return buildArtifactListResponse(result, param), nil
+}
+
+func (uc *Usecase) GetBuildArtifactsByOwnerID(ctx context.Context, param GetBuildArtifactsParam) (GetBuildArtifactsResponse, error) {
+	artifacts, err := uc.db.GetAppArtifactsByAppID(ctx, param.OwnerID)
+	if err != nil {
+		log.Error(err, "error getting build artifacts by owner ID", param)
+		return GetBuildArtifactsResponse{}, err
+	}
+
+	result := make([]BuildArtifactInfo, len(artifacts))
+	for index, artifact := range artifacts {
+		result[index] = convertBuildArtifactInfoFromDB(artifact)
+	}
+
+	return buildArtifactListResponse(result, param), nil
 }
 
 func (uc *Usecase) GetBuildAppStatus(ctx context.Context, appID string) (BuildStatus, error) {
@@ -107,7 +136,16 @@ func (uc *Usecase) SetBuildAppStatus(ctx context.Context, param UpdateBuildStatu
 	return nil
 }
 
-func getRepositoryName(url string) string {
-	segments := strings.Split(url, "/")
-	return segments[len(segments)-1]
+func buildArtifactListResponse(artifacts []BuildArtifactInfo, param GetBuildArtifactsParam) GetBuildArtifactsResponse {
+	if len(artifacts) == 0 {
+		return GetBuildArtifactsResponse{
+			Artifacts: []BuildArtifactInfo{},
+		}
+	}
+
+	return GetBuildArtifactsResponse{
+		Artifacts: artifacts,
+		TotalPage: artifacts[0].Total / param.PerPage,
+		Page:      param.Page,
+	}
 }

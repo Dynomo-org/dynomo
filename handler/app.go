@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mrz1836/go-sanitize"
 )
 
 var (
@@ -103,7 +104,7 @@ func (h *Handler) HandleGetAllApps(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleGetApp(ctx *gin.Context) {
-	appID := ctx.Query("id")
+	appID := sanitize.AlphaNumeric(ctx.Query("id"), false)
 	if appID == "" {
 		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
 		return
@@ -119,7 +120,7 @@ func (h *Handler) HandleGetApp(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleGetAppAds(ctx *gin.Context) {
-	appID := ctx.Query("id")
+	appID := sanitize.AlphaNumeric(ctx.Query("id"), false)
 	if appID == "" {
 		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
 		return
@@ -135,7 +136,7 @@ func (h *Handler) HandleGetAppAds(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleGetFullApp(ctx *gin.Context) {
-	appID := ctx.Query("id")
+	appID := sanitize.AlphaNumeric(ctx.Query("id"), false)
 	if appID == "" {
 		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
 		return
@@ -151,7 +152,7 @@ func (h *Handler) HandleGetFullApp(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleDeleteApp(ctx *gin.Context) {
-	appID := ctx.Query("id")
+	appID := sanitize.AlphaNumeric(ctx.Query("id"), false)
 	if appID == "" {
 		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
 		return
@@ -186,7 +187,7 @@ func (h *Handler) HandleUpdateApp(ctx *gin.Context) {
 }
 
 func (h *Handler) HandleUpdateAppIcon(ctx *gin.Context) {
-	appID := ctx.PostForm("app_id")
+	appID := sanitize.AlphaNumeric(ctx.PostForm("app_id"), false)
 	if appID == "" {
 		WriteJson(ctx, nil, errorAppIDEmpty, http.StatusBadRequest)
 		return

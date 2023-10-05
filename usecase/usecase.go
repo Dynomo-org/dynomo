@@ -5,6 +5,7 @@ import (
 	"dynapgen/repository/github"
 	"dynapgen/repository/nsq"
 	"dynapgen/repository/redis"
+	"strings"
 )
 
 type Usecase struct {
@@ -21,4 +22,9 @@ func NewUsecase(db *db.Repository, cache *redis.Repository, github *github.Repos
 		github: github,
 		mq:     mq,
 	}
+}
+
+func getRepositoryName(url string) string {
+	segments := strings.Split(url, "/")
+	return segments[len(segments)-1]
 }

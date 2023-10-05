@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mrz1836/go-sanitize"
 )
 
 var (
@@ -41,7 +42,7 @@ func (h *Handler) HandleLoginUser(ctx *gin.Context) {
 	}
 
 	param := usecase.User{
-		Email:    request.Email,
+		Email:    sanitize.Email(request.Email, true),
 		Password: request.Password,
 	}
 	result, err := h.usecase.LoginUser(ctx, param)
@@ -71,7 +72,7 @@ func (h *Handler) HandleRegisterUser(ctx *gin.Context) {
 
 	param := usecase.User{
 		FullName: request.FullName,
-		Email:    request.Email,
+		Email:    sanitize.Email(request.Email, true),
 		Password: request.Password,
 	}
 	result, err := h.usecase.RegisterUser(ctx, param)

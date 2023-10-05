@@ -40,7 +40,9 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.PUT("/build-status/app", h.HandleUpdateBuildAppStatus)
 	router.PUT("/build-status/keystore", h.HandleUpdateBuildKeystoreStatus)
 
-	router.GET("/keystores", checkUserAuthorization, h.HandleGetAllKeystores)
+	router.GET("/artifacts", checkUserAuthorization, h.HandleGetBuildArtifacts)
+
+	router.GET("/keystores", checkUserAuthorization, h.HandleGetKeystores)
 	router.POST("/keystore", checkUserAuthorization, h.HandleGenerateKeystore)
 
 	router.GET("/user/info", checkUserAuthorization, h.HandleGetUserInfo)
