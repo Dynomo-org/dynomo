@@ -1,0 +1,5 @@
+ALTER TABLE templates
+DROP COLUMN IF EXISTS strings,
+DROP COLUMN IF EXISTS styles,
+DROP COLUMN IF EXISTS created_at,
+DROP COLUMN IF EXISTS updated_at;
