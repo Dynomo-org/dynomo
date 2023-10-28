@@ -16,10 +16,18 @@ type Template struct {
 	Strings       map[string]string `json:"strings"`
 	Type          int               `json:"type"`
 	CreatedAt     time.Time         `json:"created_at"`
-	UpdatedAt     *time.Time        `json:"updated_at"`
+	UpdatedAt     time.Time         `json:"updated_at"`
 }
 
 func (t *Template) convertToDB() db.Template {
+	if t.Styles == nil {
+		t.Styles = make(map[string]string)
+	}
+
+	if t.Strings == nil {
+		t.Strings = make(map[string]string)
+	}
+
 	styles, err := json.Marshal(t.Styles)
 	if err != nil {
 		log.Error(err, "error marshalling template styles", t.Styles)
@@ -40,8 +48,8 @@ func (t *Template) convertToDB() db.Template {
 		CreatedAt:     t.CreatedAt,
 	}
 
-	if t.UpdatedAt != nil {
-		result.UpdatedAt = sql.NullTime{Valid: true, Time: *t.UpdatedAt}
+	if !t.UpdatedAt.IsZero() {
+		result.UpdatedAt = sql.NullTime{Valid: true, Time: t.UpdatedAt}
 	}
 
 	return result
@@ -65,7 +73,7 @@ func convertTemplateFromDB(template db.Template) Template {
 	}
 
 	if template.UpdatedAt.Valid {
-		result.UpdatedAt = &template.UpdatedAt.Time
+		result.UpdatedAt = template.UpdatedAt.Time
 	}
 
 	return result

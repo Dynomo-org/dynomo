@@ -73,5 +73,5 @@ func (h *Handler) HandleUpdateTemplate(ctx *gin.Context) {
 		return
 	}
 
-	WriteJson(nil, nil, nil, http.StatusAccepted)
+	WriteJson(ctx, nil, nil, http.StatusAccepted)
 }

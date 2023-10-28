@@ -3,6 +3,9 @@ package usecase
 import (
 	"context"
 	"dynapgen/util/log"
+	"time"
+
+	"github.com/rs/xid"
 )
 
 func (uc *Usecase) GetAllTemplates(ctx context.Context) ([]Template, error) {
@@ -31,6 +34,7 @@ func (uc *Usecase) GetTemplateByID(ctx context.Context, id string) (Template, er
 }
 
 func (uc *Usecase) AddTemplate(ctx context.Context, template Template) error {
+	template.ID = xid.New().String()
 	if err := uc.db.InsertTemplate(ctx, template.convertToDB()); err != nil {
 		log.Error(err, "uc.db.InsertTemplate() got error", template)
 		return nil
@@ -40,9 +44,10 @@ func (uc *Usecase) AddTemplate(ctx context.Context, template Template) error {
 }
 
 func (uc *Usecase) UpdateTemplate(ctx context.Context, template Template) error {
+	template.UpdatedAt = time.Now()
 	if err := uc.db.UpdateTemplate(ctx, template.convertToDB()); err != nil {
 		log.Error(err, "uc.db.UpdateTemplate() got error", template)
-		return nil
+		return err
 	}
 
 	return nil
