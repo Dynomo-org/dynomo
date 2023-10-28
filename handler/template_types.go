@@ -10,5 +10,5 @@ type Template struct {
 	Strings       map[string]string `json:"strings"`
 	Type          int               `json:"type"`
 	CreatedAt     time.Time         `json:"created_at"`
-	UpdatedAt     *time.Time        `json:"updated_at"`
+	UpdatedAt     time.Time         `json:"updated_at,omitempty"`
 }
