@@ -128,6 +128,31 @@ func (uc *Usecase) GetAppFull(ctx context.Context, appID string) (AppFull, error
 	return result, nil
 }
 
+func (uc *Usecase) GetAppContentsByAppID(ctx context.Context, appID string) ([]AppContent, error) {
+	appContents, err := uc.db.GetAppContentsByAppID(ctx, appID)
+	if err != nil {
+		log.Error(err, "uc.db.GetAppContentsByAppID() got error - GetAppContentsByAppID", map[string]interface{}{"app_id": appID})
+		return nil, err
+	}
+
+	result := make([]AppContent, len(appContents))
+	for index, content := range appContents {
+		result[index] = convertAppContentFromDB(content)
+	}
+
+	return result, nil
+}
+
+func (uc *Usecase) GetAppContentByID(ctx context.Context, id string) (AppContent, error) {
+	appContent, err := uc.db.GetAppContentByID(ctx, id)
+	if err != nil {
+		log.Error(err, "uc.db.GetAppContentsByAppID() got error - GetAppContentID", map[string]interface{}{"id": id})
+		return AppContent{}, err
+	}
+
+	return convertAppContentFromDB(appContent), nil
+}
+
 func (uc *Usecase) NewApp(ctx context.Context, param NewAppRequest) error {
 	app := App{
 		ID:                         xid.New().String(),
@@ -157,7 +182,7 @@ func (uc *Usecase) NewApp(ctx context.Context, param NewAppRequest) error {
 	app.Strings = appStrings
 	app.Styles = appStyles
 
-	if err = uc.db.InsertApp(ctx, app.convertAppToDB()); err != nil {
+	if err = uc.db.InsertApp(ctx, app.convertToDB()); err != nil {
 		log.Error(err, "uc.repo.InsertApp() got error - NewApp", param)
 		return err
 	}
@@ -192,6 +217,17 @@ func (uc *Usecase) NewAppAds(ctx context.Context, request NewAppAdsRequest) erro
 	return nil
 }
 
+func (uc *Usecase) NewAppContent(ctx context.Context, content AppContent) error {
+	content.ID = xid.New().String()
+	content.CreatedAt = time.Now()
+	if err := uc.db.InsertAppContent(ctx, content.convertToDB()); err != nil {
+		log.Error(err, "uc.db.InsertAppContent() got error - NewAppContent", content)
+		return err
+	}
+
+	return nil
+}
+
 func (uc *Usecase) UpdateApp(ctx context.Context, request App) error {
 	app, err := uc.GetApp(ctx, request.ID)
 	if err != nil {
@@ -200,7 +236,7 @@ func (uc *Usecase) UpdateApp(ctx context.Context, request App) error {
 	}
 
 	app.updateWith(request)
-	param := app.convertAppToDB()
+	param := app.convertToDB()
 	if err = uc.db.UpdateApp(ctx, param); err != nil {
 		log.Error(err, "uc.db.UpdateApp() got error - UpdateApp", param)
 		return err
@@ -208,6 +244,24 @@ func (uc *Usecase) UpdateApp(ctx context.Context, request App) error {
 
 	if err = uc.cache.InvalidateAppFull(ctx, app.ID); err != nil {
 		log.Error(err, "uc.cache.InvalidateApp() got error - UpdateApp", app)
+	}
+
+	return nil
+}
+
+func (uc *Usecase) UpdateAppContent(ctx context.Context, content AppContent) error {
+	existing, err := uc.db.GetAppContentByID(ctx, content.ID)
+	if err != nil {
+		return err
+	}
+	if existing.ID == "" {
+		return errorAppContentNotFound
+	}
+
+	savedContent := convertAppContentFromDB(existing)
+	savedContent.updateWith(content)
+	if err := uc.db.UpdateAppContent(ctx, savedContent.convertToDB()); err != nil {
+		return err
 	}
 
 	return nil
@@ -243,7 +297,7 @@ func (uc *Usecase) UpdateAppIcon(ctx context.Context, appID string, iconName, lo
 	timeNow := time.Now()
 	app.IconURL = iconURL
 	app.UpdatedAt = &timeNow
-	param := app.convertAppToDB()
+	param := app.convertToDB()
 	err = uc.db.UpdateApp(ctx, param)
 	if err != nil {
 		log.Error(err, "uc.repo.UpdateAppOnDB() got error - UpdateAppIcon", param)

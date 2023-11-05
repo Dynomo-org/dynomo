@@ -47,18 +47,6 @@ func (r *Repository) GetApp(ctx context.Context, appID string) (App, error) {
 	return result, nil
 }
 
-func (r *Repository) GetAppContentsByAppID(ctx context.Context, appID string) ([]AppContent, error) {
-	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
-	defer cancel()
-
-	var result []AppContent
-	if err := r.db.SelectContext(ctx, &result, queryGetAppContentsByAppID, appID); err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
 func (r *Repository) InsertApp(ctx context.Context, app App) error {
 	ctx, cancel := context.WithTimeout(ctx, queryTimeLimit)
 	defer cancel()

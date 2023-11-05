@@ -34,6 +34,11 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.PUT("/app/icon", checkUserAuthorization, h.HandleUpdateAppIcon)
 	router.GET("/apps", checkUserAuthorization, h.HandleGetAllApps)
 
+	router.GET("/app/contents", checkUserAuthorization, h.HandleGetAllContents)
+	router.GET("/app/content", checkUserAuthorization, h.HandleGetContentDetail)
+	router.POST("/app/content", checkUserAuthorization, h.HandleCreateNewContent)
+	router.PUT("/app/content", checkUserAuthorization, h.HandleUpdateContent)
+
 	router.GET("/artifacts", checkUserAuthorization, h.HandleGetBuildArtifacts)
 
 	router.GET("/build-status/app", h.HandleGetBuildAppStatus)

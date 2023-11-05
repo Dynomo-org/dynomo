@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	errorAppIDEmpty = errors.New("id is empty")
+	errorAppIDEmpty     = errors.New("app id is empty")
+	errorContentIDEmpty = errors.New("content id is empty")
 
 	imageFileTypes = map[string]struct{}{"png": {}, "jpg": {}, "jpeg": {}}
 )

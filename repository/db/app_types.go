@@ -29,10 +29,3 @@ type App struct {
 	CreatedAt                  time.Time    `db:"created_at"`
 	UpdatedAt                  sql.NullTime `db:"updated_at"`
 }
-
-type AppContent struct {
-	ID          string `db:"id"`
-	Title       string `db:"title"`
-	Description string `db:"description"`
-	Content     string `db:"content"`
-}
