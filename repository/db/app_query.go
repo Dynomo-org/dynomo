@@ -1,13 +1,10 @@
 package db
 
 const (
-	queryDeleteApp             = `DELETE FROM apps WHERE app_id = $1`
-	queryGetAppsByUserID       = `SELECT count(*) over() as total, * FROM apps WHERE owner_id = $1 ORDER BY created_at DESC`
-	queryGetApp                = `SELECT * FROM apps WHERE id = $1`
-	queryGetAppString          = `SELECT * FROM app_strings WHERE app_id = $1`
-	queryGetAppStyle           = `SELECT * FROM app_styles WHERE app_id = $1`
-	queryGetAppContentsByAppID = `SELECT id, title, description, content FROM app_contents WHERE app_id = $1`
-	queryInsertApp             = `
+	queryDeleteApp       = `DELETE FROM apps WHERE app_id = $1`
+	queryGetAppsByUserID = `SELECT count(*) over() as total, * FROM apps WHERE owner_id = $1 ORDER BY created_at DESC`
+	queryGetApp          = `SELECT * FROM apps WHERE id = $1`
+	queryInsertApp       = `
 		insert into apps(
 			id,
 			owner_id,

@@ -18,7 +18,8 @@ const (
 )
 
 var (
-	errorAppNotFound = errors.New("app not found")
+	errorAppNotFound        = errors.New("app not found")
+	errorAppContentNotFound = errors.New("app content not found")
 
 	// will be removed
 	// idea: add new column on templates (app_string jsonb, app_style jsonb)
@@ -134,10 +135,15 @@ type AppAd struct {
 }
 
 type AppContent struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Content     string `json:"content"`
+	ID           string    `json:"id"`
+	AppID        string    `json:"app_id"`
+	Title        string    `json:"title"`
+	CategoryID   string    `json:"category_id"`
+	Description  string    `json:"description"`
+	Content      string    `json:"content"`
+	ThumbnailURL string    `json:"thumbnail_url"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type GetAppListParam struct {
@@ -217,6 +223,26 @@ func (app *App) updateWith(input App) {
 	app.UpdatedAt = &timeNow
 }
 
+func (c *AppContent) updateWith(content AppContent) {
+	if content.Title != "" {
+		c.Title = content.Title
+	}
+	if content.Description != "" {
+		c.Description = content.Description
+	}
+	if content.ThumbnailURL != "" {
+		c.ThumbnailURL = content.ThumbnailURL
+	}
+	if content.Content != "" {
+		c.Content = content.Content
+	}
+	if content.CategoryID != "" {
+		c.CategoryID = content.CategoryID
+	}
+
+	c.UpdatedAt = time.Now()
+}
+
 func buildAppFull(app db.App, appAds []db.AppAds, appContents []db.AppContent) AppFull {
 	result := AppFull{
 		ID:             app.ID,
@@ -248,7 +274,7 @@ func buildAppFull(app db.App, appAds []db.AppAds, appContents []db.AppContent) A
 
 	contents := make([]AppContent, len(appContents))
 	for index, content := range appContents {
-		contents[index] = AppContent(content)
+		contents[index] = convertAppContentFromDB(content)
 	}
 	result.Content = contents
 
@@ -349,7 +375,26 @@ func convertAppFromDB(app db.App) App {
 	return result
 }
 
-func (app *App) convertAppToDB() db.App {
+func convertAppContentFromDB(content db.AppContent) AppContent {
+	result := AppContent{
+		ID:           content.ID,
+		AppID:        content.AppID,
+		Title:        content.Title,
+		CategoryID:   content.CategoryID,
+		Description:  content.Description,
+		Content:      content.Content,
+		ThumbnailURL: content.ThumbnailURL,
+		CreatedAt:    content.CreatedAt,
+	}
+
+	if content.UpdatedAt.Valid {
+		result.UpdatedAt = content.UpdatedAt.Time
+	}
+
+	return result
+}
+
+func (app *App) convertToDB() db.App {
 	stringsByte, err := json.Marshal(app.Strings)
 	if err != nil {
 		log.Error(err, "error marshalling app string", app.Strings)
@@ -387,6 +432,28 @@ func (app *App) convertAppToDB() db.App {
 		result.UpdatedAt = sql.NullTime{
 			Valid: true,
 			Time:  *app.UpdatedAt,
+		}
+	}
+
+	return result
+}
+
+func (c *AppContent) convertToDB() db.AppContent {
+	result := db.AppContent{
+		ID:           c.ID,
+		AppID:        c.AppID,
+		Title:        c.Title,
+		CategoryID:   c.CategoryID,
+		Description:  c.Description,
+		Content:      c.Content,
+		ThumbnailURL: c.ThumbnailURL,
+		CreatedAt:    c.CreatedAt,
+	}
+
+	if !c.UpdatedAt.IsZero() {
+		result.UpdatedAt = sql.NullTime{
+			Valid: true,
+			Time:  c.UpdatedAt,
 		}
 	}
 
